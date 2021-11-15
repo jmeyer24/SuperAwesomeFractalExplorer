@@ -9,6 +9,10 @@ In short: SAFE
 
 Here we can list the TODOs for future implementation goals
 
+## Setup
+
+In the file "Setup and Learning/assignment1_SS21.pdf" there is an explanation of the setup for using "npm" and the localhost (e.g. the environment setup)
+
 ## Appendix and Credits
 
 The Mandelbrot Explorer is taken from the source code of the following website:
