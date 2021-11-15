@@ -9,6 +9,11 @@ In short: SAFE
 
 Here we can list the TODOs for future implementation goals
 
+* interactive color palette for individual design
+* screenshot tool
+	+ what do we need?
+	+ online research
+
 ## Setup
 
 In the file "Setup and Learning/assignment1_SS21.pdf" there is an explanation of the setup for using "npm" and the localhost (e.g. the environment setup)
