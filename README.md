@@ -19,7 +19,13 @@ Here we can list the TODOs for future implementation goals
 
 ## Setup
 
+Initial:
+--------
 In the file "Setup and Learning/assignment1_SS21.pdf" there is an explanation of the setup for using "npm" and the localhost (e.g. the environment setup)
+
+Further:
+--------
+In the respective folders with the name "Setup..." you can find different setups of Three.js usages
 
 ## Appendix and Credits
 
