@@ -9,6 +9,7 @@ In short: SAFE
 
 Here we can list the TODOs for future implementation goals
 
+* take a look at XAOS Fractal Zoomer?!
 * interactive color palette for individual design
 * screenshot tool
 	+ what do we need?
