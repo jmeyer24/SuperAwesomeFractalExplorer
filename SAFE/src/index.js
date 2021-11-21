@@ -146,12 +146,12 @@ document.getElementById("bt_closeSettings").addEventListener("click", closeSetti
 document.getElementById("bt_openSettings").addEventListener("click", openSettings);
 
 function openSettings() {
-    document.getElementById("settings").style.display = "block";
+    document.getElementById("settings-outer").style.display = "block";
     document.getElementById("bt_openSettings").style.display = "none";
 }
 
 function closeSettings() {
-    document.getElementById("settings").style.display = "none";
+    document.getElementById("settings-outer").style.display = "none";
     document.getElementById("bt_openSettings").style.display = "block";
 }
         

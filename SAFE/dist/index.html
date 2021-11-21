@@ -11,20 +11,22 @@
         
         <canvas class="webgl">Your browser does not support HTML5.</canvas>
         <button id="bt_openSettings">☰</button>
-        <div id="settings">
-            <button id="bt_closeSettings">Close</button>
-            <h1>Settings</h1>
-            <form class="settings_form">
-                <label for="fractalSelector">Fractal: </label><br/>
-                <select name="fractalSelector" id="fractalSelector">
-                    <option disabled selected value>-- select an option --</option>
-                    <option value="mandelbrot">Mandelbrot</option>
-                    <option value="kochsnowflake">Kochsnowflake</option>
-                </select> <br/><br/>
-                <label for="maxIterations">Max iterations [1,200]: </label><br/>
-                <input type="number" id="maxIterations" name="maxIterations" min="1" max="200"> <br/><br/>
-                <input type="submit" value="Load">
-            </form>
+        <div id="settings-outer">
+            <div id="settings-inner">
+                <button id="bt_closeSettings">Close</button>
+                <h1>Settings</h1>
+                <form class="settings_form">
+                    <label for="fractalSelector">Fractal: </label><br/>
+                    <select name="fractalSelector" id="fractalSelector">
+                        <option disabled selected value>-- select an option --</option>
+                        <option value="mandelbrot">Mandelbrot</option>
+                        <option value="kochsnowflake">Kochsnowflake</option>
+                    </select> <br/><br/>
+                    <label for="maxIterations">Max iterations [1,200]: </label><br/>
+                    <input type="number" id="maxIterations" name="maxIterations" min="1" max="200"> <br/><br/>
+                    <input type="submit" value="Load">
+                </form>
+            </div>
         </div>
 
         <script type="module" src="main.js"></script>
