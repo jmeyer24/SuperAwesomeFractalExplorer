@@ -13,9 +13,11 @@
         <script type="module" src="main.js"></script>
 
         <select id="fractalSelector">
+            <option disabled selected value>-- select an option --</option>
             <option value="mandelbrot">Mandelbrot</option>
             <option value="kochsnowflake">Kochsnowflake</option>
         </select>
-        <button id="testbt">Reload</button>
+        <label for="maxIterations">max iterations between 1 and 200: </label>
+        <input type="number" id="maxIterations" name="maxIterations" min="1" max="200">
     </body>
 </html>

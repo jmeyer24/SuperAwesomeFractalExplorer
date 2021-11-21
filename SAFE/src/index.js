@@ -8,7 +8,7 @@ import { Test2Frag } from './test2.frag';
 let camera, scene, renderer;
 let geometry, material, mesh;
 let uniforms;
-let selectedFractal;
+let maxIteration = 200;
 
 let aspect = window.innerWidth / window.innerHeight;
 let zoom = 4.0;
@@ -33,6 +33,7 @@ init();
 
 function init() {
   setup();
+  console.log("init function call");
 
   uniforms = {
     res: {type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight)},
@@ -40,7 +41,8 @@ function init() {
     zoom: {type:'float', value: zoom},
     offset: {type:'vec2', value: offset},
     parameterSet1: {type:'vec3', value: new THREE.Vector3(parameters['a'], parameters['b'], parameters['c'])},
-    parameterSet2: {type:'vec3', value: new THREE.Vector3(parameters['d'], parameters['e'], parameters['f'])}
+    parameterSet2: {type:'vec3', value: new THREE.Vector3(parameters['d'], parameters['e'], parameters['f'])},
+    maxIteration: {type: 'int', value: maxIteration}
   };
   geometry = new THREE.PlaneBufferGeometry(2, 2);
   // material = getShader();
@@ -130,16 +132,15 @@ function onFractalSelect(event) {
         fragmentShader: MandelbrotFrag, // green
       });
   } else {
-    console.log("test");
+    console.log("No fractal selected");
   }
 }
 
-var testbt = document.getElementById("testbt");
-testbt.addEventListener("click", onBtClick, false);
+let maxIterationSelect = document.getElementById("maxIterations");
+maxIterationSelect.addEventListener("change", onMaxIterationSelect);
 
-function onBtClick(event) {
-  mesh.material = new THREE.ShaderMaterial({
-    uniforms: uniforms,
-    fragmentShader: Test1Frag
-  });
+function onMaxIterationSelect(event) {
+  console.log(maxIterationSelect.value);
+  maxIteration = maxIterationSelect.value;
+  mesh.material.uniforms.maxIteration.value = maxIteration;
 }

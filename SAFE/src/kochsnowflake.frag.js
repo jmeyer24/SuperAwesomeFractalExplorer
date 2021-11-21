@@ -5,6 +5,7 @@ uniform vec2 res;
 uniform float aspect;
 uniform float zoom;
 uniform vec2 offset;
+uniform int maxIteration;
 
 // gui parameters
 uniform vec3 parameterSet1;
@@ -28,7 +29,7 @@ float kochsnowflake(vec2 c){
   vec2 z_1;
   vec2 z_2;
 
-  for(int i=0; i < 200; i++){  // i < max iterations
+  for(int i=0; i < maxIteration; i++){  // i < max iterations
     z_2 = z_1;
     z_1 = z_0;
     z_0 = z;
