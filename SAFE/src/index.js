@@ -5,7 +5,7 @@ import { KochsnowflakeFrag } from './kochsnowflake.frag';
 import { Test1Frag } from './test1.frag';
 import { Test2Frag } from './test2.frag';
 
-let camera, scene, renderer;
+let camera, scene, renderer, canvas;
 let geometry, material, mesh;
 let uniforms;
 let maxIteration = 200;
@@ -33,7 +33,6 @@ init();
 
 function init() {
   setup();
-  console.log("init function call");
 
   uniforms = {
     res: {type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight)},
@@ -45,15 +44,6 @@ function init() {
     maxIteration: {type: 'int', value: maxIteration}
   };
   geometry = new THREE.PlaneBufferGeometry(2, 2);
-  // material = getShader();
-  // material = new THREE.ShaderMaterial({
-  //   uniforms: uniforms,
-  //   fragmentShader: MandelbrotFrag,
-  // });
-  // material = new THREE.ShaderMaterial({
-  //   uniforms: uniforms,
-  //   fragmentShader: Test1Frag,
-  // // });
   material = new THREE.ShaderMaterial({
     uniforms: uniforms,
     fragmentShader: Test1Frag,
@@ -74,10 +64,14 @@ function animate(){
 function setup(){
   camera = new THREE.OrthographicCamera( -1, 1, 1, -1, -1, 1);
 
+  canvas = document.querySelector('canvas.webgl');
+
   scene = new THREE.Scene();
 
-  renderer = new THREE.WebGLRenderer( { antialias: false, precision:'highp' } );
-  renderer.setSize( window.innerWidth, window.innerHeight-2 );
+  renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: false, precision:'highp' } );
+  // renderer.setSize( window.innerWidth, window.innerHeight-2 );
+  // var canvas = document.getElementById("canvas");
+  renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
   document.body.appendChild( renderer.domElement );
 }
 
@@ -87,7 +81,7 @@ function windowResize() {  //aspect intentionally not updated
   aspect = window.innerWidth / window.innerHeight;
   camera.aspect =  aspect;
   camera.updateProjectionMatrix();
-  renderer.setSize( window.innerWidth, window.innerHeight-2);
+  renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
 }
 
 function scroll(event){
@@ -114,6 +108,9 @@ function updateUniforms(){
 
 window.addEventListener('resize', windowResize, false);
 document.addEventListener('wheel', scroll);
+
+
+/* Settings */
 
 var fractalSelector = document.getElementById("fractalSelector");
 fractalSelector.addEventListener("change", onFractalSelect);
@@ -144,3 +141,17 @@ function onMaxIterationSelect(event) {
   maxIteration = maxIterationSelect.value;
   mesh.material.uniforms.maxIteration.value = maxIteration;
 }
+
+document.getElementById("bt_closeSettings").addEventListener("click", closeSettings);
+document.getElementById("bt_openSettings").addEventListener("click", openSettings);
+
+function openSettings() {
+    document.getElementById("settings").style.display = "block";
+    document.getElementById("bt_openSettings").style.display = "none";
+}
+
+function closeSettings() {
+    document.getElementById("settings").style.display = "none";
+    document.getElementById("bt_openSettings").style.display = "block";
+}
+        
