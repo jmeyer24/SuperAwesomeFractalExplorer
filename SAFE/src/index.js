@@ -2,6 +2,8 @@ import * as THREE from 'three'
 import * as dat from 'dat.gui'
 import {MandelbrotFrag} from "./mandelbrot.frag"
 import { KochsnowflakeFrag } from './kochsnowflake.frag';
+import { Test1Frag } from './test1.frag';
+import { Test2Frag } from './test2.frag';
 
 let camera, scene, renderer;
 let geometry, material, mesh;
@@ -40,13 +42,20 @@ function init() {
     parameterSet1: {type:'vec3', value: new THREE.Vector3(parameters['a'], parameters['b'], parameters['c'])},
     parameterSet2: {type:'vec3', value: new THREE.Vector3(parameters['d'], parameters['e'], parameters['f'])}
   };
-
   geometry = new THREE.PlaneBufferGeometry(2, 2);
-  material = getShader();
+  // material = getShader();
   // material = new THREE.ShaderMaterial({
   //   uniforms: uniforms,
   //   fragmentShader: MandelbrotFrag,
   // });
+  // material = new THREE.ShaderMaterial({
+  //   uniforms: uniforms,
+  //   fragmentShader: Test1Frag,
+  // // });
+  material = new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    fragmentShader: Test1Frag,
+  });
   mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
 
@@ -108,27 +117,29 @@ var fractalSelector = document.getElementById("fractalSelector");
 fractalSelector.addEventListener("change", onFractalSelect);
 
 function onFractalSelect(event) {
-  console.log(fractalSelector.value);
-  selectedFractal = fractalSelector.value;
-  init();
+  if (fractalSelector.value == "kochsnowflake") {
+    console.log("kochsnowflake was selected");
+      mesh.material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        fragmentShader: KochsnowflakeFrag, // blue
+      });
+  } else if (fractalSelector.value == "mandelbrot") {
+    console.log("mandelbrot (default) was selected");
+      mesh.material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        fragmentShader: MandelbrotFrag, // green
+      });
+  } else {
+    console.log("test");
+  }
 }
 
-function getShader() {
-  switch(selectedFractal) {
-    case "kochsnowflake":
-      console.log("kochsnowflake was selected");
-      material = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        fragmentShader: KochsnowflakeFrag,
-      });
-      return material;
-    default:
-      console.log("mandelbrot (default) was selected");
-      material = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        fragmentShader: MandelbrotFrag,
-      });
-      return material;
-  }
+var testbt = document.getElementById("testbt");
+testbt.addEventListener("click", onBtClick, false);
 
+function onBtClick(event) {
+  mesh.material = new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    fragmentShader: Test1Frag
+  });
 }
