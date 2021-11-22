@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300&family=Open+Sans+Condensed:wght@300&family=Open+Sans:wght@300&display=swap');
+
+html, body {
+    margin:         0;
+    padding:        0;
+    display:        block;
+    width:          100vw;
+    height:         100vh;
+    font-family:    'Open Sans', sans-serif;
+}
+
+button {
+    border-radius: 0%;
+	border: none;
+}
+
+/*.highlght{
+    border:1px solid green;
+}*/
+
+.webgl {
+    width:              100vw;
+    height:             100vh;
+    background-color:   yellow;
+    position:           absolute;
+    top:                0;
+    left:               0;
+    z-index:            0;
+}
+
+#settings-outer {
+    background-color:   rgb(73, 73, 73, 0.5);
+    color:              #fff;
+    width:              20vw;
+    height:             100vh;
+    position:           absolute;
+    z-index:            1;
+    top:                0;
+    left:               0;
+    display:            none;
+}
+
+#settings-inner {
+    padding:    2em;
+}
+
+#settings-help {
+    padding: 2em;
+	position: absolute;
+	bottom: 0;
+}
+
+#bt_closeSettings {
+    float: right;
+/*	transition-duration: 0.2s;*/
+}
+
+/*#bt_closeSettings:hover {
+	background-color: rgb(73, 73, 73, 0.3);
+	color: #fff;
+}*/
+
+#bt_openSettings {
+    background-color: rgb(73, 73, 73, 0.5);
+    color: #fff;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    height: 5%;
+    width: 5%;
+}
