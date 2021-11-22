@@ -20,7 +20,7 @@ vec2 conj (vec2 a){
 }
 
 // TODO: make the color as input
-vec3 color = vec3(0.3,0.7,0.9); // violett vec3(5.38, 6.15, 3.85);
+vec3 color = vec3(9.3,1.7,0.9); // violett vec3(5.38, 6.15, 3.85);
 
 float mandelbrot(vec2 c){
   float alpha = 1.0;
