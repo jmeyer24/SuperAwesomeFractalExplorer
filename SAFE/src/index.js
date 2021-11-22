@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import * as dat from 'dat.gui'
 import {MandelbrotFrag} from "./mandelbrot.frag"
+import {MandelbrotColorChangeFrag} from "./mandelbrotColorChange.frag"
 import { KochsnowflakeFrag } from './kochsnowflake.frag';
 import { Test1Frag } from './test1.frag';
 import { Test2Frag } from './test2.frag';
@@ -46,7 +47,7 @@ function init() {
   geometry = new THREE.PlaneBufferGeometry(2, 2);
   material = new THREE.ShaderMaterial({
     uniforms: uniforms,
-    fragmentShader: Test1Frag,
+    fragmentShader: KochsnowflakeFrag, // Test1Frag,
   });
   mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
@@ -127,6 +128,12 @@ function onFractalSelect(event) {
       mesh.material = new THREE.ShaderMaterial({
         uniforms: uniforms,
         fragmentShader: MandelbrotFrag, // green
+      });
+  } else if (fractalSelector.value == "mandelbrotColorChange") {
+    console.log("mandelbrot with changed color was selected");
+      mesh.material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        fragmentShader: MandelbrotColorChangeFrag, // green
       });
   } else {
     console.log("No fractal selected");
