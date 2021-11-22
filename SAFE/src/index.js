@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import * as dat from 'dat.gui'
-import {MandelbrotFrag} from "./mandelbrot.frag"
-import {MandelbrotColorChangeFrag} from "./mandelbrotColorChange.frag"
+import { MandelbrotFrag } from "./mandelbrot.frag"
+import { MandelbrotIterationChangeFrag } from "./mandelbrotIterationChange.frag"
 import { KochsnowflakeFrag } from './kochsnowflake.frag';
 import { Test1Frag } from './test1.frag';
 import { Test2Frag } from './test2.frag';
@@ -28,6 +28,9 @@ for (let key in parameters){
   gui.add(parameters, key, -5.0, 5.0).onChange(updateUniforms);
 }
 
+// we start with the settings closed
+let inSettingMode = false;
+
 init();
 
 // ===============================================
@@ -47,7 +50,7 @@ function init() {
   geometry = new THREE.PlaneBufferGeometry(2, 2);
   material = new THREE.ShaderMaterial({
     uniforms: uniforms,
-    fragmentShader: KochsnowflakeFrag, // Test1Frag,
+    fragmentShader: MandelbrotFrag, // Test1Frag,
   });
   mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
@@ -107,47 +110,101 @@ function updateUniforms(){
   uniforms['parameterSet2']['value'] = new THREE.Vector3(parameters['d'], parameters['e'], parameters['f']);
 }
 
-window.addEventListener('resize', windowResize, false);
+window.addEventListener('resize', windowResize, true);
 document.addEventListener('wheel', scroll);
 
 
 /* Settings */
 
+// when selecting a fractal, change the material shaders to the respective ones
+
 var fractalSelector = document.getElementById("fractalSelector");
 fractalSelector.addEventListener("change", onFractalSelect);
 
 function onFractalSelect(event) {
-  if (fractalSelector.value == "kochsnowflake") {
-    console.log("kochsnowflake was selected");
-      mesh.material = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        fragmentShader: KochsnowflakeFrag, // blue
-      });
-  } else if (fractalSelector.value == "mandelbrot") {
-    console.log("mandelbrot (default) was selected");
-      mesh.material = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        fragmentShader: MandelbrotFrag, // green
-      });
-  } else if (fractalSelector.value == "mandelbrotColorChange") {
-    console.log("mandelbrot with changed color was selected");
-      mesh.material = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        fragmentShader: MandelbrotColorChangeFrag, // green
-      });
-  } else {
-    console.log("No fractal selected");
-  }
+	switch(fractalSelector.value){
+		case "mandelbrot":
+			console.log("mandelbrot (default) was selected");
+			mesh.material = new THREE.ShaderMaterial({
+				uniforms: uniforms,
+				fragmentShader: MandelbrotFrag, // green
+			});break;
+		case "mandelbrotIterationChange":
+			console.log("mandelbrot with changeable iterations was selected");
+			mesh.material = new THREE.ShaderMaterial({
+				uniforms: uniforms,
+				fragmentShader: MandelbrotIterationChangeFrag, // green
+			});break;
+		case "kochsnowflake":
+			console.log("kochsnowflake was selected");
+			mesh.material = new THREE.ShaderMaterial({
+				uniforms: uniforms,
+				fragmentShader: KochsnowflakeFrag, // blue
+			});
+			break;
+		default:
+			console.log("no fractal selected");
+	}
 }
 
 let maxIterationSelect = document.getElementById("maxIterations");
 maxIterationSelect.addEventListener("change", onMaxIterationSelect);
 
 function onMaxIterationSelect(event) {
-  console.log(maxIterationSelect.value);
+//  console.log(maxIterationSelect.value);
   maxIteration = maxIterationSelect.value;
   mesh.material.uniforms.maxIteration.value = maxIteration;
 }
+
+// opening and closing the settings panel with clicks or button "Tab"
+// top/down for fractal selection, left/right for iteration selection
+
+// list
+// Tab: open/close Settings window
+// in Settings:
+// ------------
+// top/down: change fractal
+// left/right: change iteration
+//
+// in Explorer:
+// ------------
+//
+document.addEventListener("keydown", event => {
+	if(inSettingMode){ // when we are in settings mode
+		switch(event.key) {
+			case "Enter":
+				event.preventDefault();
+				break;
+			case "Tab":
+				document.querySelector("#bt_closeSettings").click();
+				event.preventDefault();
+				break;
+			case "f": // "ArrowUp"
+				$('#fractalSelector').focus();
+				break;
+			//case "ArrowDown":
+			//	$('#fractalSelector').focus();
+			//	break;
+			case "d": // "ArrowLeft"
+				$('#maxIterations').focus();
+				break;
+			case "r":
+				//$('#bt_load').focus();
+				document.querySelector("#bt_load").click();
+				break;
+			//case "ArrowRight":
+			//	$('#maxIterations').focus();
+			//	break;
+		}
+	} else { // when we are in explorer mode
+		switch(event.key){
+			case "Tab":
+				document.querySelector("#bt_openSettings").click();
+				event.preventDefault();
+				break;
+		}
+	}
+	});
 
 document.getElementById("bt_closeSettings").addEventListener("click", closeSettings);
 document.getElementById("bt_openSettings").addEventListener("click", openSettings);
@@ -155,10 +212,12 @@ document.getElementById("bt_openSettings").addEventListener("click", openSetting
 function openSettings() {
     document.getElementById("settings-outer").style.display = "block";
     document.getElementById("bt_openSettings").style.display = "none";
+	inSettingMode= !inSettingMode;
 }
 
 function closeSettings() {
     document.getElementById("settings-outer").style.display = "none";
     document.getElementById("bt_openSettings").style.display = "block";
+	inSettingMode = !inSettingMode;
 }
-        
+
