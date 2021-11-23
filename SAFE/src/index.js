@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import * as dat from 'dat.gui'
+import { sin, cos} from 'mathjs'
 import { MandelbrotFrag } from "./mandelbrot.frag"
 import { MandelbrotIterationChangeFrag } from "./mandelbrotIterationChange.frag"
 import { KochsnowflakeFrag } from './kochsnowflake.frag';
@@ -7,6 +8,7 @@ import { KochsnowflakeFrag } from './kochsnowflake.frag';
 //import { Test2Frag } from './test2.frag';
 
 let camera, scene, renderer, canvas;
+let gl, kochLine;
 let geometry, material, mesh;
 let uniforms;
 let maxIteration = 200;
@@ -30,6 +32,7 @@ for (let key in parameters){
 
 // we start with the settings menu closed
 let inSettingMode = false;
+let initialFractal = "kochsnowflake";
 
 init();
 
@@ -50,7 +53,7 @@ function init() {
   geometry = new THREE.PlaneBufferGeometry(2, 2);
   material = new THREE.ShaderMaterial({
     uniforms: uniforms,
-    fragmentShader: MandelbrotIterationChangeFrag,
+    fragmentShader: KochsnowflakeFrag,
   });
   mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
@@ -72,9 +75,14 @@ function setup(){
 
   scene = new THREE.Scene();
 
-  renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: false, precision:'highp' } );
+// removes the canvas???
+//  gl = document.getElementById("fractalCanvas").getContext("webgl");
+//  gl.clearColor(0.0,0.0,0.0,1.0);
+//  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: false, precision:'highp' } );// canvas: canvas
   // renderer.setSize( window.innerWidth, window.innerHeight-2 );
-  // var canvas = document.getElementById("canvas");
+  // let canvas = document.getElementById("canvas");
   renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
   document.body.appendChild( renderer.domElement );
 }
@@ -113,12 +121,21 @@ function updateUniforms(){
 window.addEventListener('resize', windowResize, true);
 document.addEventListener('wheel', scroll);
 
+// settings ================================================
 
-/* Settings */
+// download option preparation
+
+//let link = document.createElement('a');
+//link.href = document.getElementById("fractalCanvas");
+//link.download = 'Snapshot.jpg';
+//document.body.appendChild(link);
+//link.click();
+//document.body.removeChild(link);
 
 // when selecting a fractal, change the material shaders to the respective ones
 
-var fractalSelector = document.getElementById("fractalSelector");
+let fractalSelector = document.getElementById("fractalSelector");
+fractalSelector.value = initialFractal;
 fractalSelector.addEventListener("change", onFractalSelect);
 
 function onFractalSelect(event) {
@@ -136,6 +153,7 @@ function onFractalSelect(event) {
 				uniforms: uniforms,
 				fragmentShader: MandelbrotIterationChangeFrag,
 			});
+			scene.remove(kochLine);
 			break;
 		case "kochsnowflake":
 			console.log("kochsnowflake was selected");
@@ -143,11 +161,84 @@ function onFractalSelect(event) {
 				uniforms: uniforms,
 				fragmentShader: KochsnowflakeFrag,
 			});
+
+			// implement koch line with 2 starting points
+			const kochGeometry = new THREE.BufferGeometry();
+			
+			let points = [];
+			points.push( new THREE.Vector3( -0.5, 0, 0 ) );
+			points.push( new THREE.Vector3( 0.5, 0, 0 ) );
+			//points.push( new THREE.Vector3( 0.0, 0.5, 0 ) );
+
+			points = koch(points, 1);
+			console.log("final points: \n",points);
+
+			kochGeometry.setFromPoints( points );
+			const kochMaterial = new THREE.LineBasicMaterial( {color: 0x0000ff} );
+			kochLine = new THREE.Line( kochGeometry, kochMaterial );
+			scene.add(kochLine);
 			break;
 		default:
 			console.log("no fractal selected");
 	}
 }
+
+onFractalSelect();
+
+// the functions for the kochsnowflake computation
+
+function koch(points, depth){
+	// points is an array of THREE.Vector3 instances
+	length = points.length-1;
+	for(let j=0; j<length; j++){
+		let p1 = points[j];
+		let p2 = points[j+1];
+
+		points = divideLine(p1, p2, depth, points);
+		console.log(points);
+	}
+	return points;
+}
+
+function triangulate(p1, p2){
+	let v1 = new THREE.Vector3();
+	v1.subVectors(p2, p1);
+	v1.z = 0.0;
+
+	let v2 = new THREE.Vector3();
+	v2.x = v1.x * Math.cos(60.0) - v1.y * Math.sin(60.0);
+	v2.y = v1.x * Math.sin(60.0) + v1.y * Math.cos(60.0);
+	v2.x += p2.x; //p1.x??
+	v2.y += p2.y;
+	v2.z = 0.0;
+
+	return v2;
+}
+
+function divideLine(p1, p2, depth, points){
+	let v1 = new THREE.Vector3();
+	let v2 = new THREE.Vector3();
+
+	v1.lerpVectors(p1, p2, 1.0/3.0);
+	v2.lerpVectors(p1, p2, 2.0/3.0);
+
+	let v3 = triangulate(p1, p2);
+
+	if(depth == 1){
+		let start = points.findIndex((element) => element == p1);
+		let end = points.findIndex((element) => element == p2);
+		points = points.slice(0,start+1).concat([v1,v3,v2], points.slice(end));
+		console.log(points);
+		return points;
+	}
+
+	divideLine(p1, v1, depth-1, points);
+	divideLine(v1, v2, depth-1, points);
+	divideLine(v2, v3, depth-1, points);
+	divideLine(v3, p2, depth-1, points);
+}
+
+// other stuff
 
 let maxIterationSelect = document.getElementById("maxIterations");
 maxIterationSelect.addEventListener("change", onMaxIterationSelect);
@@ -189,7 +280,10 @@ document.addEventListener("keydown", event => {
 			case "r":
 				document.querySelector("#bt_load").click();
 				break;
-		}
+			case "s":
+				link.click()
+				break;
+	}
 	} else { // when we are in explorer mode
 		switch(event.key){
 			case "Tab":

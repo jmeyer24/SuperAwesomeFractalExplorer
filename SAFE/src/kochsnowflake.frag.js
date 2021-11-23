@@ -38,7 +38,7 @@ void main(){ // gl_FragCoord in [0,1]
   //}
   //alpha = alpha / float(maxIteration);
 
-  gl_FragColor = vec4(alpha,0.0,0.0,1.0);
+  gl_FragColor = vec4(alpha,alpha,alpha,0.5);
 }
 
 `
