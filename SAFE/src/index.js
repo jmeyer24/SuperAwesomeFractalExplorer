@@ -28,7 +28,7 @@ for (let key in parameters){
   gui.add(parameters, key, -5.0, 5.0).onChange(updateUniforms);
 }
 
-// we start with the settings closed
+// we start with the settings menu closed
 let inSettingMode = false;
 
 init();
@@ -50,7 +50,7 @@ function init() {
   geometry = new THREE.PlaneBufferGeometry(2, 2);
   material = new THREE.ShaderMaterial({
     uniforms: uniforms,
-    fragmentShader: MandelbrotFrag, // Test1Frag,
+    fragmentShader: MandelbrotFrag,
   });
   mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
@@ -81,7 +81,7 @@ function setup(){
 
 // events ================================================
 
-function windowResize() {  //aspect intentionally not updated
+function windowResize() {  // aspect intentionally not updated
   aspect = window.innerWidth / window.innerHeight;
   camera.aspect =  aspect;
   camera.updateProjectionMatrix();
@@ -127,19 +127,19 @@ function onFractalSelect(event) {
 			console.log("mandelbrot (default) was selected");
 			mesh.material = new THREE.ShaderMaterial({
 				uniforms: uniforms,
-				fragmentShader: MandelbrotFrag, // green
+				fragmentShader: MandelbrotFrag,
 			});break;
 		case "mandelbrotIterationChange":
 			console.log("mandelbrot with changeable iterations was selected");
 			mesh.material = new THREE.ShaderMaterial({
 				uniforms: uniforms,
-				fragmentShader: MandelbrotIterationChangeFrag, // green
+				fragmentShader: MandelbrotIterationChangeFrag,
 			});break;
 		case "kochsnowflake":
 			console.log("kochsnowflake was selected");
 			mesh.material = new THREE.ShaderMaterial({
 				uniforms: uniforms,
-				fragmentShader: KochsnowflakeFrag, // blue
+				fragmentShader: KochsnowflakeFrag,
 			});
 			break;
 		default:
@@ -151,20 +151,19 @@ let maxIterationSelect = document.getElementById("maxIterations");
 maxIterationSelect.addEventListener("change", onMaxIterationSelect);
 
 function onMaxIterationSelect(event) {
-//  console.log(maxIterationSelect.value);
   maxIteration = maxIterationSelect.value;
   mesh.material.uniforms.maxIteration.value = maxIteration;
 }
 
-// opening and closing the settings panel with clicks or button "Tab"
-// top/down for fractal selection, left/right for iteration selection
-
-// list
+// list of keystroke events
+//
 // Tab: open/close Settings window
+//
 // in Settings:
 // ------------
-// top/down: change fractal
-// left/right: change iteration
+// f: focus fractal
+// d: focus iteration slide
+// r: reload explorer
 //
 // in Explorer:
 // ------------
@@ -179,22 +178,15 @@ document.addEventListener("keydown", event => {
 				document.querySelector("#bt_closeSettings").click();
 				event.preventDefault();
 				break;
-			case "f": // "ArrowUp"
+			case "f":
 				$('#fractalSelector').focus();
 				break;
-			//case "ArrowDown":
-			//	$('#fractalSelector').focus();
-			//	break;
-			case "d": // "ArrowLeft"
+			case "d":
 				$('#maxIterations').focus();
 				break;
 			case "r":
-				//$('#bt_load').focus();
 				document.querySelector("#bt_load").click();
 				break;
-			//case "ArrowRight":
-			//	$('#maxIterations').focus();
-			//	break;
 		}
 	} else { // when we are in explorer mode
 		switch(event.key){
@@ -204,7 +196,7 @@ document.addEventListener("keydown", event => {
 				break;
 		}
 	}
-	});
+});
 
 document.getElementById("bt_closeSettings").addEventListener("click", closeSettings);
 document.getElementById("bt_openSettings").addEventListener("click", openSettings);
@@ -220,5 +212,3 @@ function closeSettings() {
     document.getElementById("bt_openSettings").style.display = "block";
 	inSettingMode = !inSettingMode;
 }
-
->>>>>>> playground-2
