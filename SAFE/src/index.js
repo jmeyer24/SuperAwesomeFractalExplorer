@@ -3,8 +3,8 @@ import * as dat from 'dat.gui'
 import { MandelbrotFrag } from "./mandelbrot.frag"
 import { MandelbrotIterationChangeFrag } from "./mandelbrotIterationChange.frag"
 import { KochsnowflakeFrag } from './kochsnowflake.frag';
-import { Test1Frag } from './test1.frag';
-import { Test2Frag } from './test2.frag';
+//import { Test1Frag } from './test1.frag';
+//import { Test2Frag } from './test2.frag';
 
 let camera, scene, renderer, canvas;
 let geometry, material, mesh;
@@ -50,7 +50,7 @@ function init() {
   geometry = new THREE.PlaneBufferGeometry(2, 2);
   material = new THREE.ShaderMaterial({
     uniforms: uniforms,
-    fragmentShader: MandelbrotFrag,
+    fragmentShader: MandelbrotIterationChangeFrag,
   });
   mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
@@ -128,13 +128,15 @@ function onFractalSelect(event) {
 			mesh.material = new THREE.ShaderMaterial({
 				uniforms: uniforms,
 				fragmentShader: MandelbrotFrag,
-			});break;
+			});
+			break;
 		case "mandelbrotIterationChange":
 			console.log("mandelbrot with changeable iterations was selected");
 			mesh.material = new THREE.ShaderMaterial({
 				uniforms: uniforms,
 				fragmentShader: MandelbrotIterationChangeFrag,
-			});break;
+			});
+			break;
 		case "kochsnowflake":
 			console.log("kochsnowflake was selected");
 			mesh.material = new THREE.ShaderMaterial({

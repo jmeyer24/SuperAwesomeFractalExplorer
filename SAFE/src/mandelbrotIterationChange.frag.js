@@ -1,4 +1,4 @@
-export const KochsnowflakeFrag =`
+export const MandelbrotIterationChangeFrag =`
 
 precision highp float;
 uniform vec2 res;
@@ -20,9 +20,9 @@ vec2 conj (vec2 a){
 }
 
 // TODO: make the color as input
-vec3 color = vec3(0.7,0.1,0.3); // violett vec3(5.38, 6.15, 3.85);
+vec3 color = vec3(9.3,1.7,0.9); // violett vec3(5.38, 6.15, 3.85);
 
-float kochsnowflake(vec2 c){
+float mandelbrot(vec2 c){
   float alpha = 1.0;
   vec2 z = vec2(0.0 , 0.0);
   vec2 z_0;
@@ -61,7 +61,7 @@ float kochsnowflake(vec2 c){
 
 void main(){ // gl_FragCoord in [0,1]
   vec2 uv = zoom * vec2(aspect, 1.0) * gl_FragCoord.xy / res + offset;
-  float s = kochsnowflake(uv);
+  float s = 1.0 - mandelbrot(uv);
 
   vec3 coord = vec3(s, s, s);
   gl_FragColor = vec4(pow(coord, color), 1.0);
