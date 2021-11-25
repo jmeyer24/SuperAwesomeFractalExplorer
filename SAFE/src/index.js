@@ -32,7 +32,8 @@ for (let key in parameters){
 
 // we start with the settings menu closed
 let inSettingMode = false;
-let initialFractal = "kochsnowflake";
+//let initialFractal = "kochsnowflake";
+let initialFractal = "mandelbrot";
 
 init();
 

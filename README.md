@@ -16,6 +16,7 @@ Here we can list the TODOs for future implementation goals
 	+ online research
 * display different fractals (Mandelbrot, Kochsnowflake, etc.)
 * change number of iterations of fractal process
+* mandelbrot is scewed, head is scewed
 
 ## Setup
 
