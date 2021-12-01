@@ -10,19 +10,13 @@ uniform vec2 offset;
 // gui parameters
 uniform vec3 parameterSet1;
 uniform vec3 parameterSet2;
+uniform vec3 color;
 
-vec2 cm (vec2 a, vec2 b){
+vec2 complexMultiplikation (vec2 a, vec2 b){
   return vec2(a.x*b.x - a.y*b.y, a.x*b.y + b.x*a.y);
 }
 
-vec2 conj (vec2 a){
-  return vec2(a.x, -a.y);
-}
-
-// TODO: make the color as input
-vec3 color = vec3(9.3,1.7,0.9); // violett vec3(5.38, 6.15, 3.85);
-
-float mandelbrot(vec2 c){
+float mandelbrot(vec2 complexNumber){
   float alpha = 1.0;
   vec2 z = vec2(0.0 , 0.0);
   vec2 z_0;
@@ -42,9 +36,9 @@ float mandelbrot(vec2 c){
     vec2 z_1_sq = vec2(x_1_sq - y_1_sq, 2.0*z_1.x*z_1.y);
 
     // the recurrence equation
-    z = parameterSet1.x*z_0_sq + c + parameterSet1.y*z_1_sq
-    + parameterSet1.z*cm(z_1_sq, z_2) + parameterSet2.x*cm(z_1_sq, z_0)
-    + parameterSet2.y*cm(z_2, z_0) + parameterSet2.z*cm(z_1, z_2);
+    z = parameterSet1.x*z_0_sq + complexNumber + parameterSet1.y*z_1_sq
+    + parameterSet1.z*complexMultiplikation(z_1_sq, z_2) + parameterSet2.x*complexMultiplikation(z_1_sq, z_0)
+    + parameterSet2.y*complexMultiplikation(z_2, z_0) + parameterSet2.z*complexMultiplikation(z_1, z_2);
 
     float z_0_mag = x_0_sq + y_0_sq;
     float z_1_mag = x_1_sq + y_1_sq;

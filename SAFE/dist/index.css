@@ -28,7 +28,7 @@ button {
     z-index:            0;
 }
 
-#settings-outer {
+#outerSettings {
     background-color:   rgb(73, 73, 73, 0.5);
     color:              #fff;
     width:              20vw;
@@ -40,11 +40,11 @@ button {
     display:            none;
 }
 
-#settings-inner {
+#innerSettings {
     padding:    2em;
 }
 
-#settings-help {
+#helpSettings {
     padding: 2em;
 	position: absolute;
 	bottom: 0;

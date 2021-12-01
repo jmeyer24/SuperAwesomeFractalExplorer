@@ -11,7 +11,6 @@ let camera, scene, renderer, canvas;
 let gl, kochLine;
 let geometry, material, mesh;
 let uniforms;
-let maxIteration = 200;
 
 let aspect = window.innerWidth / window.innerHeight;
 let zoom = 4.0;
@@ -30,44 +29,46 @@ for (let key in parameters){
   gui.add(parameters, key, -5.0, 5.0).onChange(updateUniforms);
 }
 
-// we start with the settings menu closed
+// starting settings ========================================================
+
 let inSettingMode = false;
-//let initialFractal = "kochsnowflake";
-let initialFractal = "mandelbrot";
+let initialFractal = "mandelbrot"; // "kochsnowflake";
+let maxIterations = 200;
+// in onColorSelect it converts the color to the opposite?! -> Why?!
+let fractalColor = "#2070DF"; // blue
+//let fractalColor = "#1E0064"; // initial violet
+//let fractalColor = "#66cc33"; // green
+let colorIntensity = 10.0;
 
-init();
+// html elements ============================================================
 
-// ===============================================
+let id_maxIterations = document.getElementById("maxIterations");
+let id_fractalSelector = document.getElementById("fractalSelector");
+id_fractalSelector.value = initialFractal;
+let id_bt_closeSettings = document.getElementById("bt_closeSettings");
+let id_bt_openSettings = document.getElementById("bt_openSettings");
+let id_outerSettings = document.getElementById("outerSettings");
+let id_colorSelector = document.getElementById("colorSelector");
+//id_colorSelector.value = initialColor; // doesn't work with rgb colors it seems
+let id_colorIntensity = document.getElementById("colorIntensity");
+let id_bt_load = document.getElementById("bt_load");
+let id_bt_save = document.getElementById("bt_save");
 
-function init() {
-  setup();
+// event listeners ============================================================
 
-  uniforms = {
-    res: {type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight)},
-    aspect: {type: 'float', value: aspect},
-    zoom: {type:'float', value: zoom},
-    offset: {type:'vec2', value: offset},
-    parameterSet1: {type:'vec3', value: new THREE.Vector3(parameters['a'], parameters['b'], parameters['c'])},
-    parameterSet2: {type:'vec3', value: new THREE.Vector3(parameters['d'], parameters['e'], parameters['f'])},
-    maxIteration: {type: 'int', value: maxIteration}
-  };
-  geometry = new THREE.PlaneBufferGeometry(2, 2);
-  material = new THREE.ShaderMaterial({
-    uniforms: uniforms,
-    fragmentShader: KochsnowflakeFrag,
-  });
-  mesh = new THREE.Mesh(geometry, material);
-  scene.add(mesh);
+window.addEventListener('resize', windowResize, true);
+document.addEventListener('wheel', scroll);
+document.addEventListener("keydown", onKeydown);
+id_maxIterations.addEventListener("input", onMaxIterations); 
+// "input" instead of "change" and it goes on the fly even with the mouse
+//window.addEventListener("load", onFractalSelect, false);
+id_fractalSelector.addEventListener("change", onFractalSelect);
+id_bt_openSettings.addEventListener("click", onOpenSettings);
+id_bt_closeSettings.addEventListener("click", onCloseSettings);
+id_colorSelector.addEventListener("input", onColorSelect);
+id_colorIntensity.addEventListener("input", onColorIntensity);
 
-  animate();
-}
-
-function animate(){
-  renderer.render(scene, camera);
-  requestAnimationFrame(animate);
-}
-
-// Setup ================================================
+// Setup functions ==========================================================
 
 function setup(){
   camera = new THREE.OrthographicCamera( -1, 1, 1, -1, -1, 1);
@@ -81,14 +82,43 @@ function setup(){
 //  gl.clearColor(0.0,0.0,0.0,1.0);
 //  gl.clear(gl.COLOR_BUFFER_BIT);
 
-  renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: false, precision:'highp' } );// canvas: canvas
+  renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: false, precision:'highp' } );
   // renderer.setSize( window.innerWidth, window.innerHeight-2 );
   // let canvas = document.getElementById("canvas");
   renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
   document.body.appendChild( renderer.domElement );
 }
 
-// events ================================================
+function animate(){
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+
+function init() {
+  setup();
+
+  uniforms = {
+    res: {type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight)},
+    aspect: {type: 'float', value: aspect},
+    zoom: {type:'float', value: zoom},
+    offset: {type:'vec2', value: offset},
+    parameterSet1: {type:'vec3', value: new THREE.Vector3(parameters['a'], parameters['b'], parameters['c'])},
+    parameterSet2: {type:'vec3', value: new THREE.Vector3(parameters['d'], parameters['e'], parameters['f'])},
+    iterations: {type: 'int', value: maxIterations},
+    color: {type: 'vec3', value: fractalColor}
+  };
+  geometry = new THREE.PlaneBufferGeometry(2, 2);
+  material = new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    fragmentShader: KochsnowflakeFrag,
+  });
+  mesh = new THREE.Mesh(geometry, material);
+  scene.add(mesh);
+
+  animate();
+}
+
+// Event functions ================================================
 
 function windowResize() {  // aspect intentionally not updated
   aspect = window.innerWidth / window.innerHeight;
@@ -119,28 +149,52 @@ function updateUniforms(){
   uniforms['parameterSet2']['value'] = new THREE.Vector3(parameters['d'], parameters['e'], parameters['f']);
 }
 
-window.addEventListener('resize', windowResize, true);
-document.addEventListener('wheel', scroll);
+function onKeydown(event){
+	if(inSettingMode){ // when we are in settings mode
+		switch(event.key) {
+			case "Enter":
+				event.preventDefault();
+				break;
+			case "Tab":
+				id_bt_closeSettings.click();
+				event.preventDefault();
+				break;
+			case "a":
+				id_fractalSelector.focus();
+				break;
+			case "s":
+				id_maxIterations.focus();
+				break;
+			case "d":
+				id_colorIntensity.focus();
+				break;
+			case "f":
+				id_colorSelector.click();
+				break;
+			case "u":
+				id_bt_load.click();
+				break;
+			case "i":
+				id_bt_save.click();
+				break;
+		}
+	} else { // when we are in explorer mode
+		switch(event.key){
+			case "Tab":
+				id_bt_openSettings.click();
+				event.preventDefault();
+				break;
+		}
+	}
+}
 
-// settings ================================================
+function onMaxIterations() {
+  maxIterations = id_maxIterations.value;
+  mesh.material.uniforms.iterations.value = maxIterations;
+}
 
-// download option preparation
-
-//let link = document.createElement('a');
-//link.href = document.getElementById("fractalCanvas");
-//link.download = 'Snapshot.jpg';
-//document.body.appendChild(link);
-//link.click();
-//document.body.removeChild(link);
-
-// when selecting a fractal, change the material shaders to the respective ones
-
-let fractalSelector = document.getElementById("fractalSelector");
-fractalSelector.value = initialFractal;
-fractalSelector.addEventListener("change", onFractalSelect);
-
-function onFractalSelect(event) {
-	switch(fractalSelector.value){
+function onFractalSelect() {
+	switch(id_fractalSelector.value){
 		case "mandelbrot":
 			console.log("mandelbrot (default) was selected");
 			mesh.material = new THREE.ShaderMaterial({
@@ -184,9 +238,62 @@ function onFractalSelect(event) {
 	}
 }
 
-onFractalSelect();
+function onOpenSettings() {
+	id_outerSettings.style.display = "block";
+	id_bt_openSettings.style.display = "none";
+	inSettingMode= !inSettingMode;
+}
 
-// the functions for the kochsnowflake computation
+function onCloseSettings() {
+	id_outerSettings.style.display = "none";
+	id_bt_openSettings.style.display = "block";
+	inSettingMode = !inSettingMode;
+}
+
+function onColorSelect() {
+	function convert(color) {
+		// https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
+		// for the following ES6 function
+		const hexToRGBArray = hex => hex.match(/[A-Za-z0-9]{2}/g).map(v => parseInt(v, 16));
+
+		color = hexToRGBArray(color);
+		color = new THREE.Vector3(color[0], color[1], color[2]);
+		color = color.divideScalar(255.0) // range 0 to 1
+		let convert = new THREE.Vector3(1.0, 1.0, 1.0);
+		convert.sub(color);
+		color =  convert;
+		return color
+	}
+
+	fractalColor = convert(id_colorSelector.value);
+	onColorChange();
+}
+
+function onColorIntensity() {
+	colorIntensity = id_colorIntensity.value;
+	onColorChange();
+}
+
+function onColorChange() { // both ColorSelect and ColorIntensity!!!
+	let placeHolderColor = new THREE.Vector3();
+	placeHolderColor.copy(fractalColor);
+	placeHolderColor.multiplyScalar(colorIntensity);
+	mesh.material.uniforms.color.value = placeHolderColor;
+	placeHolderColor = null;
+	console.log(fractalColor);
+}
+
+
+// download option preparation
+
+//let link = document.createElement('a');
+//link.href = document.getElementById("fractalCanvas");
+//link.download = 'Snapshot.jpg';
+//document.body.appendChild(link);
+//link.click();
+//document.body.removeChild(link);
+
+// Kochsnowflake computation functions =======================================
 
 function koch(points, depth){
 	// points is an array of THREE.Vector3 instances
@@ -196,7 +303,7 @@ function koch(points, depth){
 		let p2 = points[j+1];
 
 		points = divideLine(p1, p2, depth, points);
-		console.log(points);
+		//console.log(points);
 	}
 	return points;
 }
@@ -229,7 +336,7 @@ function divideLine(p1, p2, depth, points){
 		let start = points.findIndex((element) => element == p1);
 		let end = points.findIndex((element) => element == p2);
 		points = points.slice(0,start+1).concat([v1,v3,v2], points.slice(end));
-		console.log(points);
+		//console.log(points);
 		return points;
 	}
 
@@ -239,73 +346,10 @@ function divideLine(p1, p2, depth, points){
 	divideLine(v3, p2, depth-1, points);
 }
 
-// other stuff
+// Initialization ==========================================================
 
-let maxIterationSelect = document.getElementById("maxIterations");
-maxIterationSelect.addEventListener("change", onMaxIterationSelect);
-
-function onMaxIterationSelect(event) {
-  maxIteration = maxIterationSelect.value;
-  mesh.material.uniforms.maxIteration.value = maxIteration;
-}
-
-// list of keystroke events
-//
-// Tab: open/close Settings window
-//
-// in Settings:
-// ------------
-// f: focus fractal
-// d: focus iteration slide
-// r: reload explorer
-//
-// in Explorer:
-// ------------
-//
-document.addEventListener("keydown", event => {
-	if(inSettingMode){ // when we are in settings mode
-		switch(event.key) {
-			case "Enter":
-				event.preventDefault();
-				break;
-			case "Tab":
-				document.querySelector("#bt_closeSettings").click();
-				event.preventDefault();
-				break;
-			case "f":
-				$('#fractalSelector').focus();
-				break;
-			case "d":
-				$('#maxIterations').focus();
-				break;
-			case "r":
-				document.querySelector("#bt_load").click();
-				break;
-			case "s":
-				link.click()
-				break;
-	}
-	} else { // when we are in explorer mode
-		switch(event.key){
-			case "Tab":
-				document.querySelector("#bt_openSettings").click();
-				event.preventDefault();
-				break;
-		}
-	}
-});
-
-document.getElementById("bt_closeSettings").addEventListener("click", closeSettings);
-document.getElementById("bt_openSettings").addEventListener("click", openSettings);
-
-function openSettings() {
-    document.getElementById("settings-outer").style.display = "block";
-    document.getElementById("bt_openSettings").style.display = "none";
-	inSettingMode= !inSettingMode;
-}
-
-function closeSettings() {
-    document.getElementById("settings-outer").style.display = "none";
-    document.getElementById("bt_openSettings").style.display = "block";
-	inSettingMode = !inSettingMode;
-}
+init();
+onFractalSelect();
+onMaxIterations();
+id_colorSelector.value = fractalColor;
+onColorSelect();
