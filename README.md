@@ -10,6 +10,8 @@ In short: SAFE
 
 Here we can list the TODOs for future implementation goals
 
+### All
+
 * put some use to the save and load buttons
 * why do we need to convert the color to the inversed color in onColorSelect?
 * take a look at XAOS Fractal Zoomer?!
@@ -18,6 +20,11 @@ Here we can list the TODOs for future implementation goals
 	+ online research
 * display different fractals (Mandelbrot, Kochsnowflake, etc.)
 * mandelbrot is scewed, head is scewed
+
+### Glade
+
+* snowflake as shader not mesh
+* connect iteration-slider to snowflake
 
 ## Done
 

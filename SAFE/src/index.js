@@ -8,8 +8,9 @@ import { KochsnowflakeFrag } from './kochsnowflake.frag';
 //import { Test2Frag } from './test2.frag';
 
 let camera, scene, renderer, canvas;
-let gl, kochLine;
+let gl;
 let geometry, material, mesh;
+let kochGeometry, kochMaterial, kochMesh;
 let uniforms;
 
 let aspect = window.innerWidth / window.innerHeight;
@@ -32,8 +33,8 @@ for (let key in parameters){
 // starting settings ========================================================
 
 let inSettingMode = false;
-let initialFractal = "mandelbrot"; // "kochsnowflake";
-let maxIterations = 200;
+let initialFractal = "kochsnowflake"; // "mandelbrot";
+let iterations = 200;
 // in onColorSelect it converts the color to the opposite?! -> Why?!
 let fractalColor = "#2070DF"; // blue
 //let fractalColor = "#1E0064"; // initial violet
@@ -42,7 +43,7 @@ let colorIntensity = 10.0;
 
 // html elements ============================================================
 
-let id_maxIterations = document.getElementById("maxIterations");
+let id_iterations = document.getElementById("iterations");
 let id_fractalSelector = document.getElementById("fractalSelector");
 id_fractalSelector.value = initialFractal;
 let id_bt_closeSettings = document.getElementById("bt_closeSettings");
@@ -59,7 +60,7 @@ let id_bt_save = document.getElementById("bt_save");
 window.addEventListener('resize', windowResize, true);
 document.addEventListener('wheel', scroll);
 document.addEventListener("keydown", onKeydown);
-id_maxIterations.addEventListener("input", onMaxIterations); 
+id_iterations.addEventListener("input", onIterations); 
 // "input" instead of "change" and it goes on the fly even with the mouse
 //window.addEventListener("load", onFractalSelect, false);
 id_fractalSelector.addEventListener("change", onFractalSelect);
@@ -104,9 +105,10 @@ function init() {
     offset: {type:'vec2', value: offset},
     parameterSet1: {type:'vec3', value: new THREE.Vector3(parameters['a'], parameters['b'], parameters['c'])},
     parameterSet2: {type:'vec3', value: new THREE.Vector3(parameters['d'], parameters['e'], parameters['f'])},
-    iterations: {type: 'int', value: maxIterations},
+    iterations: {type: 'int', value: iterations},
     color: {type: 'vec3', value: fractalColor}
   };
+
   geometry = new THREE.PlaneBufferGeometry(2, 2);
   material = new THREE.ShaderMaterial({
     uniforms: uniforms,
@@ -163,7 +165,7 @@ function onKeydown(event){
 				id_fractalSelector.focus();
 				break;
 			case "s":
-				id_maxIterations.focus();
+				id_iterations.focus();
 				break;
 			case "d":
 				id_colorIntensity.focus();
@@ -188,9 +190,9 @@ function onKeydown(event){
 	}
 }
 
-function onMaxIterations() {
-  maxIterations = id_maxIterations.value;
-  mesh.material.uniforms.iterations.value = maxIterations;
+function onIterations() {
+  iterations = id_iterations.value;
+  mesh.material.uniforms.iterations.value = iterations;
 }
 
 function onFractalSelect() {
@@ -208,7 +210,7 @@ function onFractalSelect() {
 				uniforms: uniforms,
 				fragmentShader: MandelbrotIterationChangeFrag,
 			});
-			scene.remove(kochLine);
+			scene.remove(kochMesh);
 			break;
 		case "kochsnowflake":
 			console.log("kochsnowflake was selected");
@@ -218,20 +220,32 @@ function onFractalSelect() {
 			});
 
 			// implement koch line with 2 starting points
-			const kochGeometry = new THREE.BufferGeometry();
-			
+			kochGeometry = new THREE.BufferGeometry();
 			let points = [];
-			points.push( new THREE.Vector3( -0.5, 0, 0 ) );
-			points.push( new THREE.Vector3( 0.5, 0, 0 ) );
-			//points.push( new THREE.Vector3( 0.0, 0.5, 0 ) );
 
-			points = koch(points, 1);
-			console.log("final points: \n",points);
+			// koch line
+			points.push( new THREE.Vector3(0.5,0.0,0.0));
+			points.push( new THREE.Vector3(-0.5,0.0,0.0));
+			// koch snowflake (starting as a triangle)
+			//let rad = Math.PI/2.0;
+			//points.push( new THREE.Vector3( 0.5 * Math.cos(rad), 0.5 * Math.sin(rad), 0.0 ));
+			//rad = 7.0*Math.PI/6.0;
+			//points.push( new THREE.Vector3( 0.5 * Math.cos(rad), 0.5 * Math.sin(rad), 0.0 ));
+			//rad = 11.0*Math.PI/6.0;
+			//points.push( new THREE.Vector3( 0.5 * Math.cos(rad), 0.5 * Math.sin(rad), 0.0 ));
+			//rad = Math.PI/2.0;
+			//points.push( new THREE.Vector3( 0.5 * Math.cos(rad), 0.5 * Math.sin(rad), 0.0 ));
+
+			// call kochSnowflake(), a recursive function to compute the snowflake points
+			// with the initial depth of 1, e.g. only one spike
+			iterations = 5; // change it interactively, not higher than 6
+			points = kochSnowflake(points, iterations);
+			//console.log("final points: \n",points);
 
 			kochGeometry.setFromPoints( points );
-			const kochMaterial = new THREE.LineBasicMaterial( {color: 0x0000ff} );
-			kochLine = new THREE.Line( kochGeometry, kochMaterial );
-			scene.add(kochLine);
+			kochMaterial = new THREE.LineBasicMaterial( {color: 0x0000ff} );
+			kochMesh = new THREE.Line( kochGeometry, kochMaterial );
+			scene.add(kochMesh);
 			break;
 		default:
 			console.log("no fractal selected");
@@ -280,7 +294,7 @@ function onColorChange() { // both ColorSelect and ColorIntensity!!!
 	placeHolderColor.multiplyScalar(colorIntensity);
 	mesh.material.uniforms.color.value = placeHolderColor;
 	placeHolderColor = null;
-	console.log(fractalColor);
+	//console.log(fractalColor);
 }
 
 
@@ -295,61 +309,84 @@ function onColorChange() { // both ColorSelect and ColorIntensity!!!
 
 // Kochsnowflake computation functions =======================================
 
-function koch(points, depth){
-	// points is an array of THREE.Vector3 instances
-	length = points.length-1;
-	for(let j=0; j<length; j++){
-		let p1 = points[j];
-		let p2 = points[j+1];
-
-		points = divideLine(p1, p2, depth, points);
-		//console.log(points);
+function kochSnowflake(points, depth){
+	// we do at least one iteration
+	if(depth<1){
+		return points;
 	}
+	// points is an array of THREE.Vector3 instances
+	let numLines = points.length-1;
+	let currIdx = 0;
+	for(let j=0; j<numLines; j++){ // +x as we insert recursively
+		currIdx = j*Math.pow(4,depth)
+		//console.log(currIdx);
+		//console.log(points);
+		let p1 = points[currIdx];
+		let p2 = points[currIdx+1];
+
+		points = kochLine(p1, p2, depth, points);
+	}
+	return points;
+}
+
+function kochLine(p1, p2, depth, points){
+	// divide the line between p1 and p2 into 4 lines representing a spike
+	// depth is giving the current recursive depth of the splitting while
+	// points is the array of points in the final snowflake
+	let v1 = new THREE.Vector3();
+	let v3 = new THREE.Vector3();
+
+	v1.lerpVectors(p1, p2, 1.0/3.0);
+	v3.lerpVectors(p1, p2, 2.0/3.0);
+
+	let v2 = triangulate(v1, v3);
+
+	//console.log(depth);
+	//console.log("before: ",points);
+	//console.log(p1,p2);
+	let start = points.findIndex((element) => element == p1);
+	points = points.slice(0,start+1).concat([v1,v2,v3], points.slice(start+1));
+	//console.log("after: ",points);
+
+	if(depth == 1){
+		return points;
+	}
+
+	//console.log("outside");
+	points = kochLine(p1, v1, depth-1, points);
+	//console.log("\nafter first\n");
+	//console.log(points);
+	points = kochLine(v1, v2, depth-1, points);
+	//console.log("\nafter second\n");
+	//console.log(points);
+	points = kochLine(v2, v3, depth-1, points);
+	//console.log("\nafter third\n");
+	//console.log(points);
+	points = kochLine(v3, p2, depth-1, points);
+	//console.log("\nafter fourth\n");
+	//console.log(points);
+	
 	return points;
 }
 
 function triangulate(p1, p2){
 	let v1 = new THREE.Vector3();
 	v1.subVectors(p2, p1);
-	v1.z = 0.0;
 
 	let v2 = new THREE.Vector3();
-	v2.x = v1.x * Math.cos(60.0) - v1.y * Math.sin(60.0);
-	v2.y = v1.x * Math.sin(60.0) + v1.y * Math.cos(60.0);
-	v2.x += p2.x; //p1.x??
-	v2.y += p2.y;
-	v2.z = 0.0;
+	let rad = -Math.PI/3.0;
+	v2.x = v1.x * Math.cos(rad) - v1.y * Math.sin(rad);
+	v2.y = v1.x * Math.sin(rad) + v1.y * Math.cos(rad);
+	v2.x += p1.x;
+	v2.y += p1.y;
 
 	return v2;
-}
-
-function divideLine(p1, p2, depth, points){
-	let v1 = new THREE.Vector3();
-	let v2 = new THREE.Vector3();
-
-	v1.lerpVectors(p1, p2, 1.0/3.0);
-	v2.lerpVectors(p1, p2, 2.0/3.0);
-
-	let v3 = triangulate(p1, p2);
-
-	if(depth == 1){
-		let start = points.findIndex((element) => element == p1);
-		let end = points.findIndex((element) => element == p2);
-		points = points.slice(0,start+1).concat([v1,v3,v2], points.slice(end));
-		//console.log(points);
-		return points;
-	}
-
-	divideLine(p1, v1, depth-1, points);
-	divideLine(v1, v2, depth-1, points);
-	divideLine(v2, v3, depth-1, points);
-	divideLine(v3, p2, depth-1, points);
 }
 
 // Initialization ==========================================================
 
 init();
 onFractalSelect();
-onMaxIterations();
+onIterations();
 id_colorSelector.value = fractalColor;
 onColorSelect();
