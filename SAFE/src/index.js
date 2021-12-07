@@ -11,8 +11,9 @@ let geometry, material, mesh;
 let uniforms;
 
 let aspect = window.innerWidth / window.innerHeight;
-let zoom = 4.0;
-let offset = new THREE.Vector2(-2.0*aspect, -2.0);
+console.log("aspect: " + aspect);
+let zoom = 3.0;
+let offset = new THREE.Vector2(-2.0*aspect, -1.5);
 
 let gui = new dat.GUI({width: 300});
 let parameters = {
@@ -37,6 +38,8 @@ let fractalColor = "#2070DF"; // blue
 //let fractalColor = "#1E0064"; // initial violet
 //let fractalColor = "#66cc33"; // green
 let colorIntensity = 10.0;
+let mouseWheelPressed = false;
+let downKeys = {};
 
 // html elements ============================================================
 
@@ -56,8 +59,11 @@ canvas = document.querySelector('canvas.webgl');
 
 window.addEventListener('resize', windowResize, true);
 canvas.addEventListener('wheel', scroll);
-window.addEventListener('mousedown', (event) => { if (event.button == 1 || event.buttons == 4) onScrollWheelClick(event);});
+canvas.addEventListener('mousedown', (event) => { if (event.button == 1 || event.buttons == 4) { mouseWheelPressed = true;  }});
+canvas.addEventListener('mouseup',   (event) => { if (event.button == 1 || event.buttons == 4) { mouseWheelPressed = false; }});
+canvas.addEventListener('mousemove', onMouseWheelDrag);
 document.addEventListener("keydown", onKeydown);
+document.addEventListener('keyup', event => { downKeys[event.keyCode] = false; });
 id_maxIterations.addEventListener("input", onMaxIterations); 
 // "input" instead of "change" and it goes on the fly even with the mouse
 //window.addEventListener("load", onFractalSelect, false);
@@ -143,10 +149,27 @@ function scroll(event){
   uniforms['offset']['value'] = offset;
 }
 
-function onScrollWheelClick(event) {
-	console.log("mouseX: " + event.clientX);
-	console.log("mouseX2: " + event.screenX);
-	console.log("mouseY :" + event.clientY /window.innerHeight);
+function onMouseWheelDrag(event) {
+	if (mouseWheelPressed) {
+		// let newPosX = offset.x;
+		// newPosX *= event.clientX/window.innerWidth;
+		// console.log("offset: " + offset.x);
+		// console.log("newPosX: " + newPosX);
+		// console.log("test: " + event.screenX/window.innerWidth);
+		// if (offset.x - newPosX > 0) {
+		// 	console.log("ist größer x");
+		// }
+		// else {
+		// 	console.log("net größer");
+		// }
+		// let newPosY = offset.y * -0.005;
+		// newPosY *= event.clientY/window.innerHeight;
+		// offset = offset.add(new THREE.Vector2(newPosX, newPosY));
+		// let newPosX = offset.x - event.clientX / window.innerWidth;
+		// offset = offset.add(new THREE.Vector2(-newPosX*aspect*0.00005, offset.y));
+		// offset = offset.add(new THREE.Vector2(offset.x, offset.y));
+
+	}
 }
 
 function updateUniforms(){
@@ -191,6 +214,29 @@ function onKeydown(event){
 				break;
 		}
 	}
+	movePOV(event.keyCode);
+}
+
+function movePOV(keyCode) {
+	// independent of settings mode:
+	let horizontalMovement = 0.0;
+	let verticalMovement = 0.0;
+	downKeys[event.keyCode] = true;
+	
+	if (downKeys[37]) {
+		horizontalMovement -= 0.05;
+		console.log("test");
+	}
+	if (downKeys[39]) {
+		horizontalMovement += 0.05;
+	}
+	if (downKeys[40]) {
+		verticalMovement -= 0.05;
+	}
+	if (downKeys[38]) {
+		verticalMovement += 0.05;
+	}
+	offset = offset.add(new THREE.Vector2(horizontalMovement, verticalMovement));
 }
 
 function onMaxIterations() {
