@@ -45,8 +45,7 @@ let colorIntensity = 10.0;
 let id_maxIterations = document.getElementById("maxIterations");
 let id_fractalSelector = document.getElementById("fractalSelector");
 id_fractalSelector.value = initialFractal;
-let id_bt_closeSettings = document.getElementById("bt_closeSettings");
-let id_bt_openSettings = document.getElementById("bt_openSettings");
+let id_bt_settings = document.getElementById("bt_settings");
 let id_outerSettings = document.getElementById("outerSettings");
 let id_colorSelector = document.getElementById("colorSelector");
 //id_colorSelector.value = initialColor; // doesn't work with rgb colors it seems
@@ -63,8 +62,7 @@ id_maxIterations.addEventListener("input", onMaxIterations);
 // "input" instead of "change" and it goes on the fly even with the mouse
 //window.addEventListener("load", onFractalSelect, false);
 id_fractalSelector.addEventListener("change", onFractalSelect);
-id_bt_openSettings.addEventListener("click", onOpenSettings);
-id_bt_closeSettings.addEventListener("click", onCloseSettings);
+id_bt_settings.addEventListener("click", onClickSettingsMenu);
 id_colorSelector.addEventListener("input", onColorSelect);
 id_colorIntensity.addEventListener("input", onColorIntensity);
 
@@ -238,16 +236,15 @@ function onFractalSelect() {
 	}
 }
 
-function onOpenSettings() {
-	id_outerSettings.style.display = "block";
-	id_bt_openSettings.style.display = "none";
-	inSettingMode= !inSettingMode;
-}
-
-function onCloseSettings() {
-	id_outerSettings.style.display = "none";
-	id_bt_openSettings.style.display = "block";
-	inSettingMode = !inSettingMode;
+function onClickSettingsMenu() {
+	console.log("test");
+	if (inSettingMode) {
+		id_outerSettings.style.display = "none";
+		inSettingMode = false;
+	} else {
+		id_outerSettings.style.display = "block";
+		inSettingMode = true;
+	}
 }
 
 function onColorSelect() {

@@ -1,22 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@300&family=Open+Sans+Condensed:wght@300&family=Open+Sans:wght@300&display=swap');
 
 html, body {
-    margin:         0;
-    padding:        0;
-    display:        block;
-    width:          100vw;
-    height:         100vh;
-    font-family:    'Open Sans', sans-serif;
+    margin:             0;
+    padding:            0;
+    display:            block;
+    width:              100vw;
+    height:             100vh;
+    font-family:        'Open Sans', sans-serif;
 }
-
-button {
-    border-radius: 0%;
-	border: none;
-}
-
-/*.highlght{
-    border:1px solid green;
-}*/
 
 .webgl {
     width:              100vw;
@@ -28,45 +19,73 @@ button {
     z-index:            0;
 }
 
+#bt_settings {
+    background-color:   rgb(73, 73, 73, 0.8);
+    color:              #fff;
+    font-size:          1.2em;
+    position:           absolute;
+    top:                0;
+    left:               0;
+    z-index:            2;
+    height:             40px;
+    width:              40px;
+}
+
 #outerSettings {
     background-color:   rgb(73, 73, 73, 0.5);
     color:              #fff;
-    width:              20vw;
+    width:              25vw;
     height:             100vh;
     position:           absolute;
     z-index:            1;
     top:                0;
     left:               0;
     display:            none;
+    overflow-y:         scroll;
+    margin:             0;
+    padding:            0;
 }
 
 #innerSettings {
-    padding:    2em;
+    padding:            2em;
+    padding-left:       50px;
+    padding-top:        45px;
 }
 
-#helpSettings {
-    padding: 2em;
-	position: absolute;
-	bottom: 0;
+.separator {
+    width:              100%;
+    height:             1px;
+    background-color:   white;
 }
 
-#bt_closeSettings {
-    float: right;
-/*	transition-duration: 0.2s;*/
+h1 {
+    font-size:          2em;
+    margin:             0;
 }
 
-/*#bt_closeSettings:hover {
-	background-color: rgb(73, 73, 73, 0.3);
-	color: #fff;
-}*/
+h2 {
+    font-size:          1.2em;
+    margin:             0;
+    margin-top:         20px;
+}
 
-#bt_openSettings {
-    background-color: rgb(73, 73, 73, 0.5);
-    color: #fff;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
-    height: 5%;
-    width: 5%;
+button {
+    border-radius:      0%;
+	border:             none;
+    cursor:             pointer;
+    width:              80px;
+    height:             30px;
+}
+
+#fractalSelector, #colorSelector,  .slider {
+    cursor:             pointer;
+}
+
+#fractalSelector, .slider {
+    width:              100%;
+}
+
+#fractalSelector option:hover {
+    background-color:   rgb(134, 134, 134);
+    color:              white;
 }

@@ -18,6 +18,7 @@ Here we can list the TODOs for future implementation goals
 	+ online research
 * display different fractals (Mandelbrot, Kochsnowflake, etc.)
 * mandelbrot is scewed, head is scewed
+* implement controls (arrow keys to move around and scroll wheel to zoom? (-> prevent zooming when mouse is inside settings))
 
 ## Done
 
