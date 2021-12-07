@@ -4,8 +4,6 @@ import { sin, cos} from 'mathjs'
 import { MandelbrotFrag } from "./mandelbrot.frag"
 import { MandelbrotIterationChangeFrag } from "./mandelbrotIterationChange.frag"
 import { KochsnowflakeFrag } from './kochsnowflake.frag';
-//import { Test1Frag } from './test1.frag';
-//import { Test2Frag } from './test2.frag';
 
 let camera, scene, renderer, canvas;
 let gl, kochLine;
@@ -52,11 +50,13 @@ let id_colorSelector = document.getElementById("colorSelector");
 let id_colorIntensity = document.getElementById("colorIntensity");
 let id_bt_load = document.getElementById("bt_load");
 let id_bt_save = document.getElementById("bt_save");
+canvas = document.querySelector('canvas.webgl');
 
 // event listeners ============================================================
 
 window.addEventListener('resize', windowResize, true);
-document.addEventListener('wheel', scroll);
+canvas.addEventListener('wheel', scroll);
+window.addEventListener('mousedown', (event) => { if (event.button == 1 || event.buttons == 4) onScrollWheelClick(event);});
 document.addEventListener("keydown", onKeydown);
 id_maxIterations.addEventListener("input", onMaxIterations); 
 // "input" instead of "change" and it goes on the fly even with the mouse
@@ -71,7 +71,8 @@ id_colorIntensity.addEventListener("input", onColorIntensity);
 function setup(){
   camera = new THREE.OrthographicCamera( -1, 1, 1, -1, -1, 1);
 
-  canvas = document.querySelector('canvas.webgl');
+  //assign earlier in the document to limit mouse wheel action to canvas
+//   canvas = document.querySelector('canvas.webgl');
 
   scene = new THREE.Scene();
 
@@ -140,6 +141,12 @@ function scroll(event){
 
   uniforms['zoom']['value'] = zoom;
   uniforms['offset']['value'] = offset;
+}
+
+function onScrollWheelClick(event) {
+	console.log("mouseX: " + event.clientX);
+	console.log("mouseX2: " + event.screenX);
+	console.log("mouseY :" + event.clientY /window.innerHeight);
 }
 
 function updateUniforms(){
@@ -237,7 +244,6 @@ function onFractalSelect() {
 }
 
 function onClickSettingsMenu() {
-	console.log("test");
 	if (inSettingMode) {
 		id_outerSettings.style.display = "none";
 		inSettingMode = false;
