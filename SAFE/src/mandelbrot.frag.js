@@ -12,15 +12,41 @@ uniform vec3 parameterSet1;
 uniform vec3 parameterSet2;
 uniform vec3 color;
 
+vec3 hsv2rgb(float hue, float saturation, float brightness) {
+  int H = int(floor(hue/60.0));
+  float f = hue/60.0 - float(H);
+
+  float p = brightness * (1.0 - saturation);
+  float q = brightness * (1.0 - saturation * f);
+  float t = brightness * (1.0 - saturation * (1.0 - f));
+
+  if (H == 1) {
+    return vec3(brightness, t, p);
+  } else if (H == 2) {
+    return vec3(q, brightness, p);
+  } else if(H == 3) {
+    return vec3(p, brightness, t);
+  } else if(H == 4) {
+    return vec3(t, p, brightness);
+  } else if(H == 5) { 
+    return vec3(brightness, p, q);
+  } else {
+    return vec3(brightness, p, q);
+  }
+}
+
 vec4 getMandelbrot(vec2 c) {
   float a = 0.0, b = 0.0;
-  int maxIteration = 200;
+  int maxIteration = 300;
+  float colorScale = 80.0; // NOTE: Change this value to create different color
+
   for (int i = 0; i < maxIteration; i++) {
      float aNew = a*a - b*b + c.x;
      float bNew = 2.0 * a * b + c.y;
      if (aNew > 12.0 || bNew > 12.0) {
-       // not part of the mandelbrot set -> colored
-        return vec4(0.9/float(i+1), 0.3/float(i+1), 0.2/float(i+1), 1.0);
+        // not part of the mandelbrot set -> colored
+        vec3 col = hsv2rgb(float(i+1)/float(maxIteration) * 360.0 + colorScale, 1.0, 1.0);
+        return vec4(col.r, col.g, col.b, 1.0);
      }
      a = aNew;
      b = bNew;
@@ -30,8 +56,7 @@ vec4 getMandelbrot(vec2 c) {
 
 void main() {
   vec2 c = zoom * vec2(aspect, 1.0) * gl_FragCoord.xy / res + offset;
-  vec4 col = getMandelbrot(c);
-  gl_FragColor = col;
+  gl_FragColor = getMandelbrot(c);
 }
 
 `
