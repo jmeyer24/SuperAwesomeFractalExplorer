@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import * as dat from 'dat.gui'
-import { sin, cos} from 'mathjs'
+import { sin, cos } from 'mathjs'
 import { MandelbrotFrag } from "./mandelbrot.frag"
 import { MandelbrotIterationChangeFrag } from "./mandelbrotIterationChange.frag"
 import { KochsnowflakeFrag } from './kochsnowflake.frag';
@@ -11,21 +11,22 @@ let geometry, material, mesh;
 let uniforms;
 
 let aspect = window.innerWidth / window.innerHeight;
-console.log("aspect: " + aspect);
 let zoom = 3.0;
-let offset = new THREE.Vector2(-2.0*aspect, -1.5);
+const MIN_ZOOM = 3.0;
+// TODO: const MAX_ZOOM
+let offset = new THREE.Vector2(-2.0 * aspect, -1.5);
 
-let gui = new dat.GUI({width: 300});
+let gui = new dat.GUI({ width: 300 });
 let parameters = {
-  a: 1.01,
-  b: 0.01,
-  c: 0.01,
-  d: 0.01,
-  e: 0.01,
-  f: 0.01
+	a: 1.01,
+	b: 0.01,
+	c: 0.01,
+	d: 0.01,
+	e: 0.01,
+	f: 0.01
 }
-for (let key in parameters){
-  gui.add(parameters, key, -5.0, 5.0).onChange(updateUniforms);
+for (let key in parameters) {
+	gui.add(parameters, key, -5.0, 5.0).onChange(updateUniforms);
 }
 
 // starting settings ========================================================
@@ -40,6 +41,7 @@ let fractalColor = "#2070DF"; // blue
 let colorIntensity = 10.0;
 let mouseWheelPressed = false;
 let downKeys = {};
+let colorScale = 240.0;
 
 // html elements ============================================================
 
@@ -59,12 +61,12 @@ canvas = document.querySelector('canvas.webgl');
 
 window.addEventListener('resize', windowResize, true);
 canvas.addEventListener('wheel', scroll);
-canvas.addEventListener('mousedown', (event) => { if (event.button == 1 || event.buttons == 4) { mouseWheelPressed = true;  }});
-canvas.addEventListener('mouseup',   (event) => { if (event.button == 1 || event.buttons == 4) { mouseWheelPressed = false; }});
+canvas.addEventListener('mousedown', (event) => { if (event.button == 1 || event.buttons == 4) { mouseWheelPressed = true; } });
+canvas.addEventListener('mouseup', (event) => { if (event.button == 1 || event.buttons == 4) { mouseWheelPressed = false; } });
 canvas.addEventListener('mousemove', onMouseWheelDrag);
 document.addEventListener("keydown", onKeydown);
 document.addEventListener('keyup', event => { downKeys[event.keyCode] = false; });
-id_maxIterations.addEventListener("input", onMaxIterations); 
+id_maxIterations.addEventListener("input", onMaxIterations);
 // "input" instead of "change" and it goes on the fly even with the mouse
 //window.addEventListener("load", onFractalSelect, false);
 id_fractalSelector.addEventListener("change", onFractalSelect);
@@ -74,112 +76,141 @@ id_colorIntensity.addEventListener("input", onColorIntensity);
 
 // Setup functions ==========================================================
 
-function setup(){
-  camera = new THREE.OrthographicCamera( -1, 1, 1, -1, -1, 1);
+function setup() {
+	camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
 
-  //assign earlier in the document to limit mouse wheel action to canvas
-//   canvas = document.querySelector('canvas.webgl');
+	//assign earlier in the document to limit mouse wheel action to canvas
+	//   canvas = document.querySelector('canvas.webgl');
 
-  scene = new THREE.Scene();
+	scene = new THREE.Scene();
 
-// removes the canvas???
-//  gl = document.getElementById("fractalCanvas").getContext("webgl");
-//  gl.clearColor(0.0,0.0,0.0,1.0);
-//  gl.clear(gl.COLOR_BUFFER_BIT);
+	// removes the canvas???
+	//  gl = document.getElementById("fractalCanvas").getContext("webgl");
+	//  gl.clearColor(0.0,0.0,0.0,1.0);
+	//  gl.clear(gl.COLOR_BUFFER_BIT);
 
-  renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: false, precision:'highp' } );
-  // renderer.setSize( window.innerWidth, window.innerHeight-2 );
-  // let canvas = document.getElementById("canvas");
-  renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
-  document.body.appendChild( renderer.domElement );
+	renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: false, precision: 'highp' });
+	// renderer.setSize( window.innerWidth, window.innerHeight-2 );
+	// let canvas = document.getElementById("canvas");
+	renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+	document.body.appendChild(renderer.domElement);
 }
 
-function animate(){
-  renderer.render(scene, camera);
-  requestAnimationFrame(animate);
+function animate() {
+	renderer.render(scene, camera);
+	requestAnimationFrame(animate);
 }
 
 function init() {
-  setup();
+	setup();
 
-  uniforms = {
-    res: {type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight)},
-    aspect: {type: 'float', value: aspect},
-    zoom: {type:'float', value: zoom},
-    offset: {type:'vec2', value: offset},
-    parameterSet1: {type:'vec3', value: new THREE.Vector3(parameters['a'], parameters['b'], parameters['c'])},
-    parameterSet2: {type:'vec3', value: new THREE.Vector3(parameters['d'], parameters['e'], parameters['f'])},
-    iterations: {type: 'int', value: maxIterations},
-    color: {type: 'vec3', value: fractalColor}
-  };
-  geometry = new THREE.PlaneBufferGeometry(2, 2);
-  material = new THREE.ShaderMaterial({
-    uniforms: uniforms,
-    fragmentShader: KochsnowflakeFrag,
-  });
-  mesh = new THREE.Mesh(geometry, material);
-  scene.add(mesh);
+	uniforms = {
+		res: { type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+		aspect: { type: 'float', value: aspect },
+		zoom: { type: 'float', value: zoom },
+		offset: { type: 'vec2', value: offset },
+		parameterSet1: { type: 'vec3', value: new THREE.Vector3(parameters['a'], parameters['b'], parameters['c']) },
+		parameterSet2: { type: 'vec3', value: new THREE.Vector3(parameters['d'], parameters['e'], parameters['f']) },
+		iterations: { type: 'int', value: maxIterations },
+		color: { type: 'vec3', value: fractalColor },
+		colorScale: { type: 'float', value: colorScale }
+	};
+	geometry = new THREE.PlaneBufferGeometry(2, 2);
+	material = new THREE.ShaderMaterial({
+		uniforms: uniforms,
+		fragmentShader: KochsnowflakeFrag,
+	});
+	mesh = new THREE.Mesh(geometry, material);
+	scene.add(mesh);
 
-  animate();
+	animate();
 }
 
 // Event functions ================================================
 
 function windowResize() {  // aspect intentionally not updated
-  aspect = window.innerWidth / window.innerHeight;
-  camera.aspect =  aspect;
-  camera.updateProjectionMatrix();
-  renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+	aspect = window.innerWidth / window.innerHeight;
+	camera.aspect = aspect;
+	camera.updateProjectionMatrix();
+	renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
 }
 
+// function scroll(event) {
+// 	let zoom_0 = zoom;
+// 	// let continueZoom = false;
+
+// 	// if ("wheelDeltaY" in event) {
+// 	// 	console.log
+// 	// 	if (event.wheelDeltaY > 0) { // zoom in
+// 	// 		continueZoom = true;
+// 	// 		// TODO: if max zoom is exceeded: continueZoom = false
+// 	// 	} else { // zoom out 
+// 	// 		if (zoom_0 >= MIN_ZOOM) {
+// 	// 			continueZoom = true;
+// 	// 		}
+// 	//   	}
+// 	// }
+// 	//   else{ // no use for this part of the code??
+// 	// 	zoom *= 1 + event.deltaY*0.01;
+// 	// 	console.log("test: " + zoom);
+// 	//   }
+
+// 	if (continueZoom) {
+// 		zoom *= 1 - event.wheelDeltaY * 0.0003;
+// 		let space = zoom - zoom_0;
+// 		let mouseX = event.clientX / window.innerWidth;
+// 		let mouseY = 1 - event.clientY / window.innerHeight;
+// 		offset = offset.add(new THREE.Vector2(-mouseX * space * aspect, -mouseY * space));
+
+// 		uniforms['zoom']['value'] = zoom;
+// 		uniforms['offset']['value'] = offset;
+// 	} else {
+// 		console.log("No further zooming out possible.");
+// 	}
+// }
+
 function scroll(event){
-  let zoom_0 = zoom;
-  if ("wheelDeltaY" in event){  // chrome vs. firefox
-    zoom *= 1 - event.wheelDeltaY*0.0003;
-  } else{
-    zoom *= 1 + event.deltaY*0.01;
-  }
-
-  let space = zoom - zoom_0;
-  let mouseX = event.clientX / window.innerWidth;
-  let mouseY = 1-event.clientY / window.innerHeight;
-  offset = offset.add(new THREE.Vector2(-mouseX*space*aspect, -mouseY*space));
-
-  uniforms['zoom']['value'] = zoom;
-  uniforms['offset']['value'] = offset;
+	let zoom_0 = zoom;
+	if ("wheelDeltaY" in event){  // chrome vs. firefox
+	  zoom *= 1 - event.wheelDeltaY*0.0003;
+	  if (event.wheelDeltaY < 0) { // zoom out
+		// maxIterations -= 1;
+		
+	  } else { // zoom in
+		// maxIterations += 2;
+		console.log(maxIterations);
+		mesh.material.uniforms.iterations.value = maxIterations;
+		console.log("testklsaföasdjaföklgj");
+		// colorScale = (colorScale + 60) % 250.0;
+		// mesh.material.uniforms.colorScale.value = colorScale;
+	  }
+	//   uniforms['iterations']['value'] = maxIterations;
+	
+	} else{
+	  zoom *= 1 + event.deltaY*0.01;
+	}
+  
+	let space = zoom - zoom_0;
+	let mouseX = event.clientX / window.innerWidth;
+	let mouseY = 1-event.clientY / window.innerHeight;
+	offset = offset.add(new THREE.Vector2(-mouseX*space*aspect, -mouseY*space));
+  
+	uniforms['zoom']['value'] = zoom;
+	uniforms['offset']['value'] = offset;
 }
 
 function onMouseWheelDrag(event) {
-	if (mouseWheelPressed) {
-		// let newPosX = offset.x;
-		// newPosX *= event.clientX/window.innerWidth;
-		// console.log("offset: " + offset.x);
-		// console.log("newPosX: " + newPosX);
-		// console.log("test: " + event.screenX/window.innerWidth);
-		// if (offset.x - newPosX > 0) {
-		// 	console.log("ist größer x");
-		// }
-		// else {
-		// 	console.log("net größer");
-		// }
-		// let newPosY = offset.y * -0.005;
-		// newPosY *= event.clientY/window.innerHeight;
-		// offset = offset.add(new THREE.Vector2(newPosX, newPosY));
-		// let newPosX = offset.x - event.clientX / window.innerWidth;
-		// offset = offset.add(new THREE.Vector2(-newPosX*aspect*0.00005, offset.y));
-		// offset = offset.add(new THREE.Vector2(offset.x, offset.y));
 
-	}
 }
 
-function updateUniforms(){
-  uniforms['parameterSet1']['value'] = new THREE.Vector3(parameters['a'], parameters['b'], parameters['c']);
-  uniforms['parameterSet2']['value'] = new THREE.Vector3(parameters['d'], parameters['e'], parameters['f']);
+function updateUniforms() {
+	uniforms['parameterSet1']['value'] = new THREE.Vector3(parameters['a'], parameters['b'], parameters['c']);
+	uniforms['parameterSet2']['value'] = new THREE.Vector3(parameters['d'], parameters['e'], parameters['f']);
 }
 
-function onKeydown(event){
-	if(inSettingMode){ // when we are in settings mode
-		switch(event.key) {
+function onKeydown(event) {
+	if (inSettingMode) { // when we are in settings mode
+		switch (event.key) {
 			case "Enter":
 				event.preventDefault();
 				break;
@@ -207,7 +238,7 @@ function onKeydown(event){
 				break;
 		}
 	} else { // when we are in explorer mode
-		switch(event.key){
+		switch (event.key) {
 			case "Tab":
 				id_bt_openSettings.click();
 				event.preventDefault();
@@ -222,7 +253,7 @@ function movePOV(keyCode) {
 	let horizontalMovement = 0.0;
 	let verticalMovement = 0.0;
 	downKeys[event.keyCode] = true;
-	
+
 	if (downKeys[37]) {
 		horizontalMovement -= 0.05;
 		console.log("test");
@@ -240,12 +271,12 @@ function movePOV(keyCode) {
 }
 
 function onMaxIterations() {
-  maxIterations = id_maxIterations.value;
-  mesh.material.uniforms.iterations.value = maxIterations;
+	maxIterations = parseFloat(id_maxIterations.value);
+	mesh.material.uniforms.iterations.value = maxIterations;
 }
 
 function onFractalSelect() {
-	switch(id_fractalSelector.value){
+	switch (id_fractalSelector.value) {
 		case "mandelbrot":
 			console.log("mandelbrot (default) was selected");
 			mesh.material = new THREE.ShaderMaterial({
@@ -270,18 +301,18 @@ function onFractalSelect() {
 
 			// implement koch line with 2 starting points
 			const kochGeometry = new THREE.BufferGeometry();
-			
+
 			let points = [];
-			points.push( new THREE.Vector3( -0.5, 0, 0 ) );
-			points.push( new THREE.Vector3( 0.5, 0, 0 ) );
+			points.push(new THREE.Vector3(-0.5, 0, 0));
+			points.push(new THREE.Vector3(0.5, 0, 0));
 			//points.push( new THREE.Vector3( 0.0, 0.5, 0 ) );
 
 			points = koch(points, 1);
-			console.log("final points: \n",points);
+			console.log("final points: \n", points);
 
-			kochGeometry.setFromPoints( points );
-			const kochMaterial = new THREE.LineBasicMaterial( {color: 0x0000ff} );
-			kochLine = new THREE.Line( kochGeometry, kochMaterial );
+			kochGeometry.setFromPoints(points);
+			const kochMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
+			kochLine = new THREE.Line(kochGeometry, kochMaterial);
 			scene.add(kochLine);
 			break;
 		default:
@@ -310,7 +341,7 @@ function onColorSelect() {
 		color = color.divideScalar(255.0) // range 0 to 1
 		let convert = new THREE.Vector3(1.0, 1.0, 1.0);
 		convert.sub(color);
-		color =  convert;
+		color = convert;
 		return color
 	}
 
@@ -344,12 +375,12 @@ function onColorChange() { // both ColorSelect and ColorIntensity!!!
 
 // Kochsnowflake computation functions =======================================
 
-function koch(points, depth){
+function koch(points, depth) {
 	// points is an array of THREE.Vector3 instances
-	length = points.length-1;
-	for(let j=0; j<length; j++){
+	length = points.length - 1;
+	for (let j = 0; j < length; j++) {
 		let p1 = points[j];
-		let p2 = points[j+1];
+		let p2 = points[j + 1];
 
 		points = divideLine(p1, p2, depth, points);
 		//console.log(points);
@@ -357,7 +388,7 @@ function koch(points, depth){
 	return points;
 }
 
-function triangulate(p1, p2){
+function triangulate(p1, p2) {
 	let v1 = new THREE.Vector3();
 	v1.subVectors(p2, p1);
 	v1.z = 0.0;
@@ -372,27 +403,27 @@ function triangulate(p1, p2){
 	return v2;
 }
 
-function divideLine(p1, p2, depth, points){
+function divideLine(p1, p2, depth, points) {
 	let v1 = new THREE.Vector3();
 	let v2 = new THREE.Vector3();
 
-	v1.lerpVectors(p1, p2, 1.0/3.0);
-	v2.lerpVectors(p1, p2, 2.0/3.0);
+	v1.lerpVectors(p1, p2, 1.0 / 3.0);
+	v2.lerpVectors(p1, p2, 2.0 / 3.0);
 
 	let v3 = triangulate(p1, p2);
 
-	if(depth == 1){
+	if (depth == 1) {
 		let start = points.findIndex((element) => element == p1);
 		let end = points.findIndex((element) => element == p2);
-		points = points.slice(0,start+1).concat([v1,v3,v2], points.slice(end));
+		points = points.slice(0, start + 1).concat([v1, v3, v2], points.slice(end));
 		//console.log(points);
 		return points;
 	}
 
-	divideLine(p1, v1, depth-1, points);
-	divideLine(v1, v2, depth-1, points);
-	divideLine(v2, v3, depth-1, points);
-	divideLine(v3, p2, depth-1, points);
+	divideLine(p1, v1, depth - 1, points);
+	divideLine(v1, v2, depth - 1, points);
+	divideLine(v2, v3, depth - 1, points);
+	divideLine(v3, p2, depth - 1, points);
 }
 
 // Initialization ==========================================================

@@ -12,6 +12,7 @@ uniform vec3 parameterSet1;
 uniform vec3 parameterSet2;
 uniform vec3 color;
 uniform int iterations;
+uniform float colorScale;
 
 vec3 hsv2rgb(float hue, float saturation, float brightness) {
   int H = int(floor(hue/60.0));
@@ -38,10 +39,10 @@ vec3 hsv2rgb(float hue, float saturation, float brightness) {
 
 vec4 getMandelbrot(vec2 c) {
   float a = 0.0, b = 0.0;
-  float colorScale = 80.0; // NOTE: Change this value to create different color
+  // float colorScale = 60.0; // NOTE: Change this value to create different color
 
   for (int i = 0; i < iterations; i++) {
-     float aNew = a*a - b*b + c.x;
+     float aNew = a*a - b*b + c.x - (c.x * sin(float(i)/1000.0));
      float bNew = 2.0 * a * b + c.y;
      if (aNew > 12.0 || bNew > 12.0) {
         // not part of the mandelbrot set -> colored
