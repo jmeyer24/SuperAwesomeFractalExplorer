@@ -17,12 +17,15 @@ Here we can list the TODOs for future implementation goals
 	+ what do we need?
 	+ online research
 * display different fractals (Mandelbrot, Kochsnowflake, etc.)
-* mandelbrot is scewed, head is scewed
+* ~~mandelbrot is scewed, head is scewed~~
 * controls
 	+ move around: arrow keys or mouse drag - scroll wheel to zoom in/out
 	+ ~~no zoom when cursor is inside settings menu~~
 	+ limit zoom in (before pixel level) and zoom out (default zoom)
 * make settings menu responsive
+* colors: 
+	+ one color tone possible
+	+ change specific colors
 
 ## Done
 
