@@ -26,6 +26,9 @@ Here we can list the TODOs for future implementation goals
 * colors: 
 	+ one color tone possible
 	+ change specific colors
+* init function for html element references: 
+	+ set changeColorScaleOnScroll to value of html element
+	+ set iterations to value of html element
 
 ## Done
 

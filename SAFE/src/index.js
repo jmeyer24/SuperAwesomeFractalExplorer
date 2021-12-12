@@ -39,10 +39,11 @@ let fractalColor = "#2070DF"; // blue
 //let fractalColor = "#1E0064"; // initial violet
 //let fractalColor = "#66cc33"; // green
 let colorIntensity = 10.0;
-let mouseWheelPressed = false;
 let changeColorScaleOnScroll = false;
 let downKeys = {};
 let colorScale = 240.0;
+let mouseButtonClicked = false;
+let mouseOrigin = {x: 0.0, y: 0.0}; // mouseOrigin[0]: x-coordinate, mouseOrigin[1]: y-coordinate
 
 // html elements ============================================================
 
@@ -63,9 +64,9 @@ canvas = document.querySelector('canvas.webgl');
 
 window.addEventListener('resize', windowResize, true);
 canvas.addEventListener('wheel', scroll);
-canvas.addEventListener('mousedown', (event) => { if (event.button == 1 || event.buttons == 4) { mouseWheelPressed = true; } });
-canvas.addEventListener('mouseup', (event) => { if (event.button == 1 || event.buttons == 4) { mouseWheelPressed = false; } });
-canvas.addEventListener('mousemove', onMouseWheelDrag);
+canvas.addEventListener('mousemove', onMouseMove);
+canvas.addEventListener('mousedown', (event) => { if (event.button == 0) mouseButtonClicked = true; onMouseDown(event); });
+canvas.addEventListener('mouseup', (event) => { mouseButtonClicked = false; });
 document.addEventListener("keydown", onKeydown);
 document.addEventListener('keyup', event => { downKeys[event.keyCode] = false; });
 id_maxIterations.addEventListener("input", onMaxIterations);
@@ -203,8 +204,19 @@ function scroll(event) {
 	uniforms['offset']['value'] = offset;
 }
 
-function onMouseWheelDrag(event) {
+function onMouseDown(event) {
+	mouseButtonClicked = true;
+	mouseOrigin.x = event.clientX / window.innerWidth;
+	mouseOrigin.y = 1 - event.clientY / window.innerHeight;
+}
 
+function onMouseMove(event) {
+	if (mouseButtonClicked) {
+		let mouseX = mouseOrigin.x - (event.clientX / window.innerWidth);
+		let mouseY = mouseOrigin.y - (1 - event.clientY / window.innerHeight);
+		offset = offset.add(new THREE.Vector2(mouseX * 0.05 * aspect, mouseY * 0.05));
+	}
+	
 }
 
 function updateUniforms() {
