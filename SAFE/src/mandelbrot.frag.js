@@ -42,7 +42,7 @@ vec4 getMandelbrot(vec2 c) {
   // float colorScale = 60.0; // NOTE: Change this value to create different color
 
   for (int i = 0; i < iterations; i++) {
-     float aNew = a*a - b*b + c.x - (c.x * sin(float(i)/1000.0));
+     float aNew = a*a - b*b + c.x; //- (c.x * sin(float(i)/1000.0));
      float bNew = 2.0 * a * b + c.y;
      if (aNew > 12.0 || bNew > 12.0) {
         // not part of the mandelbrot set -> colored

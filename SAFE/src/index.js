@@ -40,6 +40,7 @@ let fractalColor = "#2070DF"; // blue
 //let fractalColor = "#66cc33"; // green
 let colorIntensity = 10.0;
 let mouseWheelPressed = false;
+let changeColorScaleOnScroll = false;
 let downKeys = {};
 let colorScale = 240.0;
 
@@ -53,6 +54,7 @@ let id_outerSettings = document.getElementById("outerSettings");
 let id_colorSelector = document.getElementById("colorSelector");
 //id_colorSelector.value = initialColor; // doesn't work with rgb colors it seems
 let id_colorIntensity = document.getElementById("colorIntensity");
+let id_changeColorScaleOnScroll = document.getElementById("changeColorScaleOnScroll");
 let id_bt_load = document.getElementById("bt_load");
 let id_bt_save = document.getElementById("bt_save");
 canvas = document.querySelector('canvas.webgl');
@@ -73,6 +75,7 @@ id_fractalSelector.addEventListener("change", onFractalSelect);
 id_bt_settings.addEventListener("click", onClickSettingsMenu);
 id_colorSelector.addEventListener("input", onColorSelect);
 id_colorIntensity.addEventListener("input", onColorIntensity);
+id_changeColorScaleOnScroll.addEventListener("change", function () { (this.checked) ? changeColorScaleOnScroll = true : changeColorScaleOnScroll = false; });
 
 // Setup functions ==========================================================
 
@@ -169,32 +172,33 @@ function windowResize() {  // aspect intentionally not updated
 // 	}
 // }
 
-function scroll(event){
+function scroll(event) {
 	let zoom_0 = zoom;
-	if ("wheelDeltaY" in event){  // chrome vs. firefox
-	  zoom *= 1 - event.wheelDeltaY*0.0003;
-	  if (event.wheelDeltaY < 0) { // zoom out
-		// maxIterations -= 1;
-		
-	  } else { // zoom in
-		// maxIterations += 2;
-		console.log(maxIterations);
-		mesh.material.uniforms.iterations.value = maxIterations;
-		console.log("testklsaföasdjaföklgj");
-		// colorScale = (colorScale + 60) % 250.0;
-		// mesh.material.uniforms.colorScale.value = colorScale;
-	  }
-	//   uniforms['iterations']['value'] = maxIterations;
-	
-	} else{
-	  zoom *= 1 + event.deltaY*0.01;
+	if ("wheelDeltaY" in event) {  // chrome vs. firefox
+		zoom *= 1 - event.wheelDeltaY * 0.0003;
+		if (changeColorScaleOnScroll) {
+			colorScale = (colorScale + 5) % 360.0;
+			mesh.material.uniforms.colorScale.value = colorScale;
+		}
+		if (event.wheelDeltaY < 0) { // zoom out
+			// maxIterations -= 1;
+
+		} else { // zoom in
+			// maxIterations += 2;
+			console.log(maxIterations);
+			mesh.material.uniforms.iterations.value = maxIterations;
+		}
+		//   uniforms['iterations']['value'] = maxIterations;
+
+	} else {
+		zoom *= 1 + event.deltaY * 0.01;
 	}
-  
+
 	let space = zoom - zoom_0;
 	let mouseX = event.clientX / window.innerWidth;
-	let mouseY = 1-event.clientY / window.innerHeight;
-	offset = offset.add(new THREE.Vector2(-mouseX*space*aspect, -mouseY*space));
-  
+	let mouseY = 1 - event.clientY / window.innerHeight;
+	offset = offset.add(new THREE.Vector2(-mouseX * space * aspect, -mouseY * space));
+
 	uniforms['zoom']['value'] = zoom;
 	uniforms['offset']['value'] = offset;
 }
