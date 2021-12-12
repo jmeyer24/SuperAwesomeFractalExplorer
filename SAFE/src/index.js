@@ -58,6 +58,7 @@ let id_colorIntensity = document.getElementById("colorIntensity");
 let id_changeColorScaleOnScroll = document.getElementById("changeColorScaleOnScroll");
 let id_bt_load = document.getElementById("bt_load");
 let id_bt_save = document.getElementById("bt_save");
+let id_body = document.getElementById("body");
 canvas = document.querySelector('canvas.webgl');
 
 // event listeners ============================================================
@@ -65,7 +66,7 @@ canvas = document.querySelector('canvas.webgl');
 window.addEventListener('resize', windowResize, true);
 canvas.addEventListener('wheel', scroll);
 canvas.addEventListener('mousemove', onMouseMove);
-canvas.addEventListener('mousedown', (event) => { if (event.button == 0) mouseButtonClicked = true; onMouseDown(event); });
+canvas.addEventListener('mousedown', (event) => { if (event.button == 0) onMouseDown(event); });
 canvas.addEventListener('mouseup', (event) => { mouseButtonClicked = false; });
 document.addEventListener("keydown", onKeydown);
 document.addEventListener('keyup', event => { downKeys[event.keyCode] = false; });
@@ -76,7 +77,7 @@ id_fractalSelector.addEventListener("change", onFractalSelect);
 id_bt_settings.addEventListener("click", onClickSettingsMenu);
 id_colorSelector.addEventListener("input", onColorSelect);
 id_colorIntensity.addEventListener("input", onColorIntensity);
-id_changeColorScaleOnScroll.addEventListener("change", function () { (this.checked) ? changeColorScaleOnScroll = true : changeColorScaleOnScroll = false; });
+id_changeColorScaleOnScroll.addEventListener("change", onScrollChangeColorScale);
 
 // Setup functions ==========================================================
 
@@ -98,6 +99,7 @@ function setup() {
 	// let canvas = document.getElementById("canvas");
 	renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
 	document.body.appendChild(renderer.domElement);
+	initSettings();
 }
 
 function animate() {
@@ -128,6 +130,10 @@ function init() {
 	scene.add(mesh);
 
 	animate();
+}
+
+function initSettings() {
+	
 }
 
 // Event functions ================================================
@@ -186,7 +192,6 @@ function scroll(event) {
 
 		} else { // zoom in
 			// maxIterations += 2;
-			console.log(maxIterations);
 			mesh.material.uniforms.iterations.value = maxIterations;
 		}
 		//   uniforms['iterations']['value'] = maxIterations;
@@ -214,7 +219,8 @@ function onMouseMove(event) {
 	if (mouseButtonClicked) {
 		let mouseX = mouseOrigin.x - (event.clientX / window.innerWidth);
 		let mouseY = mouseOrigin.y - (1 - event.clientY / window.innerHeight);
-		offset = offset.add(new THREE.Vector2(mouseX * 0.05 * aspect, mouseY * 0.05));
+		offset = offset.add(new THREE.Vector2(mouseX * 0.05 * zoom * aspect, mouseY * 0.05 * zoom));
+		console.log(zoom);
 	}
 	
 }
@@ -290,6 +296,11 @@ function onMaxIterations() {
 	maxIterations = parseFloat(id_maxIterations.value);
 	mesh.material.uniforms.iterations.value = maxIterations;
 }
+
+function onScrollChangeColorScale() {
+	changeColorScaleOnScroll = (this.checked) ? true : false;
+}
+
 
 function onFractalSelect() {
 	switch (id_fractalSelector.value) {
@@ -449,3 +460,4 @@ onFractalSelect();
 onMaxIterations();
 id_colorSelector.value = fractalColor;
 onColorSelect();
+onScrollChangeColorScale();
