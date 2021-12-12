@@ -19,7 +19,8 @@ Here we can list the TODOs for future implementation goals
 * display different fractals (Mandelbrot, Kochsnowflake, etc.)
 * ~~mandelbrot is scewed, head is scewed~~
 * controls
-	+ move around: arrow keys or mouse drag - scroll wheel to zoom in/out
+	+ move around: arrow keys [improve or delete] or mouse drag - note: zoom dependenance
+	+ scroll wheel to zoom in/out
 	+ ~~no zoom when cursor is inside settings menu~~
 	+ limit zoom in (before pixel level) and zoom out (default zoom)
 * make settings menu responsive
