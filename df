@@ -1,0 +1,372 @@
+[1mdiff --cc SAFE/dist/index.html[m
+[1mindex 6194a31,30218af..0000000[m
+[1m--- a/SAFE/dist/index.html[m
+[1m+++ b/SAFE/dist/index.html[m
+[1mdiff --cc SAFE/dist/main.js[m
+[1mindex 193b2d7,d9f44d7..0000000[m
+[1mdeleted file mode 100644,100644[m
+[1m--- a/SAFE/dist/main.js[m
+[1m+++ /dev/null[m
+[1mdiff --cc SAFE/src/index.js[m
+[1mindex 6fea914,408d539..0000000[m
+[1m--- a/SAFE/src/index.js[m
+[1m+++ b/SAFE/src/index.js[m
+[36m@@@ -1,33 -1,32 +1,33 @@@[m
+[31m--import * as THREE from 'three'[m
+[31m--import * as dat from 'dat.gui'[m
+[31m- import { sin, cos} from 'mathjs'[m
+[31m -import { sin, cos } from 'mathjs'[m
+[31m--import { MandelbrotFrag } from "./mandelbrot.frag"[m
+[31m--import { MandelbrotIterationChangeFrag } from "./mandelbrotIterationChange.frag"[m
+[31m--import { KochsnowflakeFrag } from './kochsnowflake.frag';[m
+[31m- //import { Test1Frag } from './test1.frag';[m
+[31m- //import { Test2Frag } from './test2.frag';[m
+[32m++import * as THREE from "three";[m
+[32m++import * as dat from "dat.gui";[m
+[32m++import { sin, cos } from "mathjs";[m
+[32m++import { MandelbrotFrag } from "./mandelbrot.frag";[m
+[32m++import { MandelbrotIterationChangeFrag } from "./mandelbrotIterationChange.frag";[m
+[32m++import { KochsnowflakeFrag } from "./kochsnowflake.frag";[m
+  [m
+  let camera, scene, renderer, canvas;[m
+[31m -let gl, kochLine;[m
+[32m +let gl;[m
+  let geometry, material, mesh;[m
+[32m +let kochGeometry, kochMaterial, kochMesh;[m
+  let uniforms;[m
+  [m
+  let aspect = window.innerWidth / window.innerHeight;[m
+[31m- let zoom = 4.0;[m
+[31m- let offset = new THREE.Vector2(-2.0*aspect, -2.0);[m
+[32m+ let zoom = 3.0;[m
+[32m+ const MIN_ZOOM = 3.0;[m
+[32m+ // TODO: const MAX_ZOOM[m
+[32m+ let offset = new THREE.Vector2(-2.0 * aspect, -1.5);[m
+  [m
+[31m- let gui = new dat.GUI({width: 300});[m
+[32m+ let gui = new dat.GUI({ width: 300 });[m
+  let parameters = {[m
+[31m -	a: 1.01,[m
+[31m -	b: 0.01,[m
+[31m -	c: 0.01,[m
+[31m -	d: 0.01,[m
+[31m -	e: 0.01,[m
+[31m -	f: 0.01[m
+[31m -}[m
+[32m +  a: 1.01,[m
+[32m +  b: 0.01,[m
+[32m +  c: 0.01,[m
+[32m +  d: 0.01,[m
+[32m +  e: 0.01,[m
+[31m-   f: 0.01[m
+[31m- }[m
+[31m- for (let key in parameters){[m
+[32m++  f: 0.01,[m
+[32m++};[m
+[32m+ for (let key in parameters) {[m
+[31m -	gui.add(parameters, key, -5.0, 5.0).onChange(updateUniforms);[m
+[32m +  gui.add(parameters, key, -5.0, 5.0).onChange(updateUniforms);[m
+  }[m
+  [m
+  // starting settings ========================================================[m
+[36m@@@ -40,264 -39,358 +40,418 @@@[m [mlet fractalColor = "#2070DF"; // blu[m
+  //let fractalColor = "#1E0064"; // initial violet[m
+  //let fractalColor = "#66cc33"; // green[m
+  let colorIntensity = 10.0;[m
+[32m+ let changeColorScaleOnScroll = false;[m
+[32m+ let downKeys = {};[m
+[32m+ let colorScale = 240.0;[m
+[32m+ let mouseButtonClicked = false;[m
+[31m -let mouseOrigin = {x: 0.0, y: 0.0}; // mouseOrigin[0]: x-coordinate, mouseOrigin[1]: y-coordinate[m
+[32m++let mouseOrigin = { x: 0.0, y: 0.0 }; // mouseOrigin[0]: x-coordinate, mouseOrigin[1]: y-coordinate[m
+  [m
+  // html elements ============================================================[m
+  [m
+[31m -let id_maxIterations = document.getElementById("maxIterations");[m
+[32m +let id_iterations = document.getElementById("iterations");[m
+  let id_fractalSelector = document.getElementById("fractalSelector");[m
+  id_fractalSelector.value = initialFractal;[m
+[31m- let id_bt_closeSettings = document.getElementById("bt_closeSettings");[m
+[31m- let id_bt_openSettings = document.getElementById("bt_openSettings");[m
+[32m+ let id_bt_settings = document.getElementById("bt_settings");[m
+  let id_outerSettings = document.getElementById("outerSettings");[m
+  let id_colorSelector = document.getElementById("colorSelector");[m
+  //id_colorSelector.value = initialColor; // doesn't work with rgb colors it seems[m
+  let id_colorIntensity = document.getElementById("colorIntensity");[m
+[31m -let id_changeColorScaleOnScroll = document.getElementById("changeColorScaleOnScroll");[m
+[32m++let id_changeColorScaleOnScroll = document.getElementById([m
+[32m++  "changeColorScaleOnScroll"[m
+[32m++);[m
+  let id_bt_load = document.getElementById("bt_load");[m
+  let id_bt_save = document.getElementById("bt_save");[m
+[32m+ let id_body = document.getElementById("body");[m
+[31m -canvas = document.querySelector('canvas.webgl');[m
+[32m++canvas = document.querySelector("canvas.webgl");[m
+  [m
+  // event listeners ============================================================[m
+  [m
+[31m--window.addEventListener('resize', windowResize, true);[m
+[31m- document.addEventListener('wheel', scroll);[m
+[31m -canvas.addEventListener('wheel', scroll);[m
+[31m -canvas.addEventListener('mousemove', onMouseMove);[m
+[31m -canvas.addEventListener('mousedown', (event) => { if (event.button == 0) onMouseDown(event); });[m
+[31m -canvas.addEventListener('mouseup', (event) => { mouseButtonClicked = false; });[m
+[32m++window.addEventListener("resize", windowResize, true);[m
+[32m++canvas.addEventListener("wheel", scroll);[m
+[32m++canvas.addEventListener("mousemove", onMouseMove);[m
+[32m++canvas.addEventListener("mousedown", (event) => {[m
+[32m++  if (event.button == 0) onMouseDown(event);[m
+[32m++});[m
+[32m++canvas.addEventListener("mouseup", (event) => {[m
+[32m++  mouseButtonClicked = false;[m
+[32m++});[m
+  document.addEventListener("keydown", onKeydown);[m
+[31m- id_iterations.addEventListener("input", onIterations); [m
+[31m -document.addEventListener('keyup', event => { downKeys[event.keyCode] = false; });[m
+[31m -id_maxIterations.addEventListener("input", onMaxIterations);[m
+[32m++id_iterations.addEventListener("input", onIterations);[m
+[32m++document.addEventListener("keyup", (event) => {[m
+[32m++  downKeys[event.keyCode] = false;[m
+[32m++});[m
+  // "input" instead of "change" and it goes on the fly even with the mouse[m
+  //window.addEventListener("load", onFractalSelect, false);[m
+  id_fractalSelector.addEventListener("change", onFractalSelect);[m
+[31m- id_bt_openSettings.addEventListener("click", onOpenSettings);[m
+[31m- id_bt_closeSettings.addEventListener("click", onCloseSettings);[m
+[32m+ id_bt_settings.addEventListener("click", onClickSettingsMenu);[m
+  id_colorSelector.addEventListener("input", onColorSelect);[m
+  id_colorIntensity.addEventListener("input", onColorIntensity);[m
+[31m -id_changeColorScaleOnScroll.addEventListener("change", onScrollChangeColorScale);[m
+[32m++id_changeColorScaleOnScroll.addEventListener([m
+[32m++  "change",[m
+[32m++  onScrollChangeColorScale[m
+[32m++);[m
+  [m
+  // Setup functions ==========================================================[m
+  [m
+[31m- function setup(){[m
+[31m-   camera = new THREE.OrthographicCamera( -1, 1, 1, -1, -1, 1);[m
+[32m+ function setup() {[m
+[31m -	camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);[m
+[31m -[m
+[31m -	//assign earlier in the document to limit mouse wheel action to canvas[m
+[31m -	//   canvas = document.querySelector('canvas.webgl');[m
+[31m -[m
+[31m -	scene = new THREE.Scene();[m
+[31m -[m
+[31m -	// removes the canvas???[m
+[31m -	//  gl = document.getElementById("fractalCanvas").getContext("webgl");[m
+[31m -	//  gl.clearColor(0.0,0.0,0.0,1.0);[m
+[31m -	//  gl.clear(gl.COLOR_BUFFER_BIT);[m
+[31m -[m
+[31m -	renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: false, precision: 'highp' });[m
+[31m -	// renderer.setSize( window.innerWidth, window.innerHeight-2 );[m
+[31m -	// let canvas = document.getElementById("canvas");[m
+[31m -	renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);[m
+[31m -	document.body.appendChild(renderer.domElement);[m
+[31m -	initSettings();[m
+[32m++  camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);[m
+[32m +[m
+[31m-   canvas = document.querySelector('canvas.webgl');[m
+[32m++  //assign earlier in the document to limit mouse wheel action to canvas[m
+[32m++  //   canvas = document.querySelector('canvas.webgl');[m
+[32m +[m
+[32m +  scene = new THREE.Scene();[m
+[32m +[m
+[31m- // removes the canvas???[m
+[31m- //  gl = document.getElementById("fractalCanvas").getContext("webgl");[m
+[31m- //  gl.clearColor(0.0,0.0,0.0,1.0);[m
+[31m- //  gl.clear(gl.COLOR_BUFFER_BIT);[m
+[32m++  // removes the canvas???[m
+[32m++  //  gl = document.getElementById("fractalCanvas").getContext("webgl");[m
+[32m++  //  gl.clearColor(0.0,0.0,0.0,1.0);[m
+[32m++  //  gl.clear(gl.COLOR_BUFFER_BIT);[m
+[32m +[m
+[31m-   renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: false, precision:'highp' } );[m
+[32m++  renderer = new THREE.WebGLRenderer({[m
+[32m++    canvas: canvas,[m
+[32m++    antialias: false,[m
+[32m++    precision: "highp",[m
+[32m++  });[m
+[32m +  // renderer.setSize( window.innerWidth, window.innerHeight-2 );[m
+[32m +  // let canvas = document.getElementById("canvas");[m
+[32m +  renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);[m
+[31m-   document.body.appendChild( renderer.domElement );[m
+[32m++  document.body.appendChild(renderer.domElement);[m
+[32m++  initSettings();[m
+  }[m
+  [m
+[31m- function animate(){[m
+[32m+ function animate() {[m
+[31m -	renderer.render(scene, camera);[m
+[31m -	requestAnimationFrame(animate);[m
+[32m +  renderer.render(scene, camera);[m
+[32m +  requestAnimationFrame(animate);[m
+  }[m
+  [m
+  function init() {[m
+[31m -	setup();[m
+[31m -[m
+[31m -	uniforms = {[m
+[31m -		res: { type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight) },[m
+[31m -		aspect: { type: 'float', value: aspect },[m
+[31m -		zoom: { type: 'float', value: zoom },[m
+[31m -		offset: { type: 'vec2', value: offset },[m
+[31m -		parameterSet1: { type: 'vec3', value: new THREE.Vector3(parameters['a'], parameters['b'], parameters['c']) },[m
+[31m -		parameterSet2: { type: 'vec3', value: new THREE.Vector3(parameters['d'], parameters['e'], parameters['f']) },[m
+[31m -		iterations: { type: 'int', value: maxIterations },[m
+[31m -		color: { type: 'vec3', value: fractalColor },[m
+[31m -		colorScale: { type: 'float', value: colorScale }[m
+[31m -	};[m
+[31m -	geometry = new THREE.PlaneBufferGeometry(2, 2);[m
+[31m -	material = new THREE.ShaderMaterial({[m
+[31m -		uniforms: uniforms,[m
+[31m -		fragmentShader: KochsnowflakeFrag,[m
+[31m -	});[m
+[31m -	mesh = new THREE.Mesh(geometry, material);[m
+[31m -	scene.add(mesh);[m
+[31m -[m
+[31m -	animate();[m
+[32m +  setup();[m
+[32m +[m
+[32m +  uniforms = {[m
+[31m-     res: {type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight)},[m
+[31m-     aspect: {type: 'float', value: aspect},[m
+[31m-     zoom: {type:'float', value: zoom},[m
+[31m-     offset: {type:'vec2', value: offset},[m
+[31m-     parameterSet1: {type:'vec3', value: new THREE.Vector3(parameters['a'], parameters['b'], parameters['c'])},[m
+[31m-     parameterSet2: {type:'vec3', value: new THREE.Vector3(parameters['d'], parameters['e'], parameters['f'])},[m
+[31m-     iterations: {type: 'int', value: iterations},[m
+[31m-     color: {type: 'vec3', value: fractalColor}[m
+[32m++    res: {[m
+[32m++      type: "vec2",[m
+[32m++      value: new THREE.Vector2(window.innerWidth, window.innerHeight),[m
+[32m++    },[m
+[32m++    aspect: { type: "float", value: aspect },[m
+[32m++    zoom: { type: "float", value: zoom },[m
+[32m++    offset: { type: "vec2", value: offset },[m
+[32m++    parameterSet1: {[m
+[32m++      type: "vec3",[m
+[32m++      value: new THREE.Vector3([m
+[32m++        parameters["a"],[m
+[32m++        parameters["b"],[m
+[32m++        parameters["c"][m
+[32m++      ),[m
+[32m++    },[m
+[32m++    parameterSet2: {[m
+[32m++      type: "vec3",[m
+[32m++      value: new THREE.Vector3([m
+[32m++        parameters["d"],[m
+[32m++        parameters["e"],[m
+[32m++        parameters["f"][m
+[32m++      ),[m
+[32m++    },[m
+[32m++    iterations: { type: "int", value: maxIterations },[m
+[32m++    color: { type: "vec3", value: fractalColor },[m
+[32m++    colorScale: { type: "float", value: colorScale },[m
+[32m +  };[m
+[32m +[m
+[32m +  geometry = new THREE.PlaneBufferGeometry(2, 2);[m
+[32m +  material = new THREE.ShaderMaterial({[m
+[32m +    uniforms: uniforms,[m
+[32m +    fragmentShader: KochsnowflakeFrag,[m
+[32m +  });[m
+[32m +  mesh = new THREE.Mesh(geometry, material);[m
+[32m +  scene.add(mesh);[m
+[32m +[m
+[32m +  animate();[m
+  }[m
+  [m
+[32m+ function initSettings() {[m
+[31m -	[m
+[32m++  // what comes here?[m
+[32m+ }[m
+[32m+ [m
+  // Event functions ================================================[m
+  [m
+[31m--function windowResize() {  // aspect intentionally not updated[m
+[31m -	aspect = window.innerWidth / window.innerHeight;[m
+[31m -	camera.aspect = aspect;[m
+[31m -	camera.updateProjectionMatrix();[m
+[31m -	renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);[m
+[32m++function windowResize() {[m
+[32m++  // aspect intentionally not updated[m
+[32m +  aspect = window.innerWidth / window.innerHeight;[m
+[31m-   camera.aspect =  aspect;[m
+[32m++  camera.aspect = aspect;[m
+[32m +  camera.updateProjectionMatrix();[m
+[32m +  renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);[m
+  }[m
+  [m
+[31m- function scroll(event){[m
+[32m+ // function scroll(event) {[m
+[32m+ // 	let zoom_0 = zoom;[m
+[32m+ // 	// let continueZoom = false;[m
+[32m+ [m
+[32m+ // 	// if ("wheelDeltaY" in event) {[m
+[32m+ // 	// 	console.log[m
+[32m+ // 	// 	if (event.wheelDeltaY > 0) { // zoom in[m
+[32m+ // 	// 		continueZoom = true;[m
+[32m+ // 	// 		// TODO: if max zoom is exceeded: continueZoom = false[m
+[31m -// 	// 	} else { // zoom out [m
+[32m++// 	// 	} else { // zoom out[m
+[32m+ // 	// 		if (zoom_0 >= MIN_ZOOM) {[m
+[32m+ // 	// 			continueZoom = true;[m
+[32m+ // 	// 		}[m
+[32m+ // 	//   	}[m
+[32m+ // 	// }[m
+[32m+ // 	//   else{ // no use for this part of the code??[m
+[32m+ // 	// 	zoom *= 1 + event.deltaY*0.01;[m
+[32m+ // 	// 	console.log("test: " + zoom);[m
+[32m+ // 	//   }[m
+[32m+ [m
+[32m+ // 	if (continueZoom) {[m
+[32m+ // 		zoom *= 1 - event.wheelDeltaY * 0.0003;[m
+[32m+ // 		let space = zoom - zoom_0;[m
+[32m+ // 		let mouseX = event.clientX / window.innerWidth;[m
+[32m+ // 		let mouseY = 1 - event.clientY / window.innerHeight;[m
+[32m+ // 		offset = offset.add(new THREE.Vector2(-mouseX * space * aspect, -mouseY * space));[m
+[32m+ [m
+[32m+ // 		uniforms['zoom']['value'] = zoom;[m
+[32m+ // 		uniforms['offset']['value'] = offset;[m
+[32m+ // 	} else {[m
+[32m+ // 		console.log("No further zooming out possible.");[m
+[32m+ // 	}[m
+[32m+ // }[m
+[32m+ [m
+[32m+ function scroll(event) {[m
+[31m -	let zoom_0 = zoom;[m
+[31m -	if ("wheelDeltaY" in event) {  // chrome vs. firefox[m
+[31m -		zoom *= 1 - event.wheelDeltaY * 0.0003;[m
+[31m -		if (changeColorScaleOnScroll) {[m
+[31m -			colorScale = (colorScale + 5) % 360.0;[m
+[31m -			mesh.material.uniforms.colorScale.value = colorScale;[m
+[31m -		}[m
+[31m -		if (event.wheelDeltaY < 0) { // zoom out[m
+[31m -			// maxIterations -= 1;[m
+[31m -[m
+[31m -		} else { // zoom in[m
+[31m -			// maxIterations += 2;[m
+[31m -			mesh.material.uniforms.iterations.value = maxIterations;[m
+[31m -		}[m
+[31m -		//   uniforms['iterations']['value'] = maxIterations;[m
+[31m -[m
+[31m -	} else {[m
+[31m -		zoom *= 1 + event.deltaY * 0.01;[m
+[31m -	}[m
+[31m -[m
+[31m -	let space = zoom - zoom_0;[m
+[31m -	let mouseX = event.clientX / window.innerWidth;[m
+[31m -	let mouseY = 1 - event.clientY / window.innerHeight;[m
+[31m -	offset = offset.add(new THREE.Vector2(-mouseX * space * aspect, -mouseY * space));[m
+[31m -[m
+[31m -	uniforms['zoom']['value'] = zoom;[m
+[31m -	uniforms['offset']['value'] = offset;[m
+[32m +  let zoom_0 = zoom;[m
+[31m-   if ("wheelDeltaY" in event){  // chrome vs. firefox[m
+[31m-     zoom *= 1 - event.wheelDeltaY*0.0003;[m
+[31m-   } else{[m
+[31m-     zoom *= 1 + event.deltaY*0.01;[m
+[32m++  if ("wheelDeltaY" in event) {[m
+[32m++    // chrome vs. firefox[m
+[32m++    zoom *= 1 - event.w

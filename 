@@ -1,0 +1,358 @@
+[1mdiff --cc SAFE/dist/index.html[m
+[1mindex 6194a31,30218af..0000000[m
+[1m--- a/SAFE/dist/index.html[m
+[1m+++ b/SAFE/dist/index.html[m
+[1mdiff --cc SAFE/dist/main.js[m
+[1mindex 193b2d7,d9f44d7..0000000[m
+[1mdeleted file mode 100644,100644[m
+[1m--- a/SAFE/dist/main.js[m
+[1m+++ /dev/null[m
+[1mdiff --cc SAFE/src/index.js[m
+[1mindex 6fea914,408d539..0000000[m
+[1m--- a/SAFE/src/index.js[m
+[1m+++ b/SAFE/src/index.js[m
+[36m@@@ -4,13 -4,10 +4,11 @@@[m [mimport { sin, cos } from 'mathjs[m
+  import { MandelbrotFrag } from "./mandelbrot.frag"[m
+  import { MandelbrotIterationChangeFrag } from "./mandelbrotIterationChange.frag"[m
+  import { KochsnowflakeFrag } from './kochsnowflake.frag';[m
+[31m- //import { Test1Frag } from './test1.frag';[m
+[31m- //import { Test2Frag } from './test2.frag';[m
+  [m
+  let camera, scene, renderer, canvas;[m
+[31m -let gl, kochLine;[m
+[32m +let gl;[m
+  let geometry, material, mesh;[m
+[32m +let kochGeometry, kochMaterial, kochMesh;[m
+  let uniforms;[m
+  [m
+  let aspect = window.innerWidth / window.innerHeight;[m
+[36m@@@ -43,11 -47,10 +48,10 @@@[m [mlet mouseOrigin = {x: 0.0, y: 0.0}; // [m
+  [m
+  // html elements ============================================================[m
+  [m
+[31m -let id_maxIterations = document.getElementById("maxIterations");[m
+[32m +let id_iterations = document.getElementById("iterations");[m
+  let id_fractalSelector = document.getElementById("fractalSelector");[m
+  id_fractalSelector.value = initialFractal;[m
+[31m- let id_bt_closeSettings = document.getElementById("bt_closeSettings");[m
+[31m- let id_bt_openSettings = document.getElementById("bt_openSettings");[m
+[32m+ let id_bt_settings = document.getElementById("bt_settings");[m
+  let id_outerSettings = document.getElementById("outerSettings");[m
+  let id_colorSelector = document.getElementById("colorSelector");[m
+  //id_colorSelector.value = initialColor; // doesn't work with rgb colors it seems[m
+[36m@@@ -58,9 -64,13 +65,17 @@@[m [mcanvas = document.querySelector('canvas[m
+  // event listeners ============================================================[m
+  [m
+  window.addEventListener('resize', windowResize, true);[m
+[31m- document.addEventListener('wheel', scroll);[m
+[32m+ canvas.addEventListener('wheel', scroll);[m
+[32m+ canvas.addEventListener('mousemove', onMouseMove);[m
+[32m+ canvas.addEventListener('mousedown', (event) => { if (event.button == 0) onMouseDown(event); });[m
+[32m+ canvas.addEventListener('mouseup', (event) => { mouseButtonClicked = false; });[m
+  document.addEventListener("keydown", onKeydown);[m
+[32m++<<<<<<< HEAD[m
+[32m +id_iterations.addEventListener("input", onIterations); [m
+[32m++=======[m
+[32m+ document.addEventListener('keyup', event => { downKeys[event.keyCode] = false; });[m
+[32m+ id_maxIterations.addEventListener("input", onMaxIterations);[m
+[32m++>>>>>>> leos-playground[m
+  // "input" instead of "change" and it goes on the fly even with the mouse[m
+  //window.addEventListener("load", onFractalSelect, false);[m
+  id_fractalSelector.addEventListener("change", onFractalSelect);[m
+[36m@@@ -96,28 -108,32 +113,57 @@@[m [mfunction animate() [m
+  }[m
+  [m
+  function init() {[m
+[32m++<<<<<<< HEAD[m
+[32m +  setup();[m
+[32m +[m
+[32m +  uniforms = {[m
+[32m +    res: {type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight)},[m
+[32m +    aspect: {type: 'float', value: aspect},[m
+[32m +    zoom: {type:'float', value: zoom},[m
+[32m +    offset: {type:'vec2', value: offset},[m
+[32m +    parameterSet1: {type:'vec3', value: new THREE.Vector3(parameters['a'], parameters['b'], parameters['c'])},[m
+[32m +    parameterSet2: {type:'vec3', value: new THREE.Vector3(parameters['d'], parameters['e'], parameters['f'])},[m
+[32m +    iterations: {type: 'int', value: iterations},[m
+[32m +    color: {type: 'vec3', value: fractalColor}[m
+[32m +  };[m
+[32m +[m
+[32m +  geometry = new THREE.PlaneBufferGeometry(2, 2);[m
+[32m +  material = new THREE.ShaderMaterial({[m
+[32m +    uniforms: uniforms,[m
+[32m +    fragmentShader: KochsnowflakeFrag,[m
+[32m +  });[m
+[32m +  mesh = new THREE.Mesh(geometry, material);[m
+[32m +  scene.add(mesh);[m
+[32m +[m
+[32m +  animate();[m
+[32m++=======[m
+[32m+ 	setup();[m
+[32m+ [m
+[32m+ 	uniforms = {[m
+[32m+ 		res: { type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight) },[m
+[32m+ 		aspect: { type: 'float', value: aspect },[m
+[32m+ 		zoom: { type: 'float', value: zoom },[m
+[32m+ 		offset: { type: 'vec2', value: offset },[m
+[32m+ 		parameterSet1: { type: 'vec3', value: new THREE.Vector3(parameters['a'], parameters['b'], parameters['c']) },[m
+[32m+ 		parameterSet2: { type: 'vec3', value: new THREE.Vector3(parameters['d'], parameters['e'], parameters['f']) },[m
+[32m+ 		iterations: { type: 'int', value: maxIterations },[m
+[32m+ 		color: { type: 'vec3', value: fractalColor },[m
+[32m+ 		colorScale: { type: 'float', value: colorScale }[m
+[32m+ 	};[m
+[32m+ 	geometry = new THREE.PlaneBufferGeometry(2, 2);[m
+[32m+ 	material = new THREE.ShaderMaterial({[m
+[32m+ 		uniforms: uniforms,[m
+[32m+ 		fragmentShader: KochsnowflakeFrag,[m
+[32m+ 	});[m
+[32m+ 	mesh = new THREE.Mesh(geometry, material);[m
+[32m+ 	scene.add(mesh);[m
+[32m+ [m
+[32m+ 	animate();[m
+[32m+ }[m
+[32m+ [m
+[32m+ function initSettings() {[m
+[32m+ 	[m
+[32m++>>>>>>> leos-playground[m
+  }[m
+  [m
+  // Event functions ================================================[m
+[36m@@@ -188,15 -267,43 +297,49 @@@[m [mfunction onKeydown(event) [m
+  				break;[m
+  		}[m
+  	}[m
+[32m+ 	movePOV(event.keyCode);[m
+[32m+ }[m
+[32m+ [m
+[32m+ function movePOV(keyCode) {[m
+[32m+ 	// independent of settings mode:[m
+[32m+ 	let horizontalMovement = 0.0;[m
+[32m+ 	let verticalMovement = 0.0;[m
+[32m+ 	downKeys[event.keyCode] = true;[m
+[32m+ [m
+[32m+ 	if (downKeys[37]) {[m
+[32m+ 		horizontalMovement -= 0.05;[m
+[32m+ 		console.log("test");[m
+[32m+ 	}[m
+[32m+ 	if (downKeys[39]) {[m
+[32m+ 		horizontalMovement += 0.05;[m
+[32m+ 	}[m
+[32m+ 	if (downKeys[40]) {[m
+[32m+ 		verticalMovement -= 0.05;[m
+[32m+ 	}[m
+[32m+ 	if (downKeys[38]) {[m
+[32m+ 		verticalMovement += 0.05;[m
+[32m+ 	}[m
+[32m+ 	offset = offset.add(new THREE.Vector2(horizontalMovement, verticalMovement));[m
+  }[m
+  [m
+[32m++<<<<<<< HEAD[m
+[32m +function onIterations() {[m
+[32m +  iterations = id_iterations.value;[m
+[32m +  mesh.material.uniforms.iterations.value = iterations;[m
+[32m++=======[m
+[32m+ function onMaxIterations() {[m
+[32m+ 	maxIterations = parseFloat(id_maxIterations.value);[m
+[32m+ 	mesh.material.uniforms.iterations.value = maxIterations;[m
+[32m++>>>>>>> leos-playground[m
+[32m+ }[m
+[32m+ [m
+[32m+ function onScrollChangeColorScale() {[m
+[32m+ 	changeColorScaleOnScroll = (this.checked) ? true : false;[m
+  }[m
+  [m
+[32m+ [m
+  function onFractalSelect() {[m
+[31m- 	switch(id_fractalSelector.value){[m
+[32m+ 	switch (id_fractalSelector.value) {[m
+  		case "mandelbrot":[m
+  			console.log("mandelbrot (default) was selected");[m
+  			mesh.material = new THREE.ShaderMaterial({[m
+[36m@@@ -220,32 -327,20 +363,49 @@@[m
+  			});[m
+  [m
+  			// implement koch line with 2 starting points[m
+[32m++<<<<<<< HEAD[m
+[32m +			kochGeometry = new THREE.BufferGeometry();[m
+[32m +			let points = [];[m
+[32m +[m
+[32m +			// koch line[m
+[32m +			points.push( new THREE.Vector3(0.5,0.0,0.0));[m
+[32m +			points.push( new THREE.Vector3(-0.5,0.0,0.0));[m
+[32m +			// koch snowflake (starting as a triangle)[m
+[32m +			//let rad = Math.PI/2.0;[m
+[32m +			//points.push( new THREE.Vector3( 0.5 * Math.cos(rad), 0.5 * Math.sin(rad), 0.0 ));[m
+[32m +			//rad = 7.0*Math.PI/6.0;[m
+[32m +			//points.push( new THREE.Vector3( 0.5 * Math.cos(rad), 0.5 * Math.sin(rad), 0.0 ));[m
+[32m +			//rad = 11.0*Math.PI/6.0;[m
+[32m +			//points.push( new THREE.Vector3( 0.5 * Math.cos(rad), 0.5 * Math.sin(rad), 0.0 ));[m
+[32m +			//rad = Math.PI/2.0;[m
+[32m +			//points.push( new THREE.Vector3( 0.5 * Math.cos(rad), 0.5 * Math.sin(rad), 0.0 ));[m
+[32m +[m
+[32m +			// call kochSnowflake(), a recursive function to compute the snowflake points[m
+[32m +			// with the initial depth of 1, e.g. only one spike[m
+[32m +			iterations = 5; // change it interactively, not higher than 6[m
+[32m +			points = kochSnowflake(points, iterations);[m
+[32m +			//console.log("final points: \n",points);[m
+[32m +[m
+[32m +			kochGeometry.setFromPoints( points );[m
+[32m +			kochMaterial = new THREE.LineBasicMaterial( {color: 0x0000ff} );[m
+[32m +			kochMesh = new THREE.Line( kochGeometry, kochMaterial );[m
+[32m +			scene.add(kochMesh);[m
+[32m++=======[m
+[32m+ 			const kochGeometry = new THREE.BufferGeometry();[m
+[32m+ [m
+[32m+ 			let points = [];[m
+[32m+ 			points.push(new THREE.Vector3(-0.5, 0, 0));[m
+[32m+ 			points.push(new THREE.Vector3(0.5, 0, 0));[m
+[32m+ 			//points.push( new THREE.Vector3( 0.0, 0.5, 0 ) );[m
+[32m+ [m
+[32m+ 			points = koch(points, 1);[m
+[32m+ 			console.log("final points: \n", points);[m
+[32m+ [m
+[32m+ 			kochGeometry.setFromPoints(points);[m
+[32m+ 			const kochMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });[m
+[32m+ 			kochLine = new THREE.Line(kochGeometry, kochMaterial);[m
+[32m+ 			scene.add(kochLine);[m
+[32m++>>>>>>> leos-playground[m
+  			break;[m
+  		default:[m
+  			console.log("no fractal selected");[m
+[36m@@@ -309,84 -402,62 +467,135 @@@[m [mfunction onColorChange() { // both Colo[m
+  [m
+  // Kochsnowflake computation functions =======================================[m
+  [m
+[32m++<<<<<<< HEAD[m
+[32m +function kochSnowflake(points, depth){[m
+[32m +	// we do at least one iteration[m
+[32m +	if(depth<1){[m
+[32m +		return points;[m
+[32m +	}[m
+[32m +	// points is an array of THREE.Vector3 instances[m
+[32m +	let numLines = points.length-1;[m
+[32m +	let currIdx = 0;[m
+[32m +	for(let j=0; j<numLines; j++){ // +x as we insert recursively[m
+[32m +		currIdx = j*Math.pow(4,depth)[m
+[32m +		//console.log(currIdx);[m
+[32m++=======[m
+[32m+ function koch(points, depth) {[m
+[32m+ 	// points is an array of THREE.Vector3 instances[m
+[32m+ 	length = points.length - 1;[m
+[32m+ 	for (let j = 0; j < length; j++) {[m
+[32m+ 		let p1 = points[j];[m
+[32m+ 		let p2 = points[j + 1];[m
+[32m+ [m
+[32m+ 		points = divideLine(p1, p2, depth, points);[m
+[32m++>>>>>>> leos-playground[m
+  		//console.log(points);[m
+[32m +		let p1 = points[currIdx];[m
+[32m +		let p2 = points[currIdx+1];[m
+[32m +[m
+[32m +		points = kochLine(p1, p2, depth, points);[m
+  	}[m
+  	return points;[m
+  }[m
+  [m
+[32m++<<<<<<< HEAD[m
+[32m +function kochLine(p1, p2, depth, points){[m
+[32m +	// divide the line between p1 and p2 into 4 lines representing a spike[m
+[32m +	// depth is giving the current recursive depth of the splitting while[m
+[32m +	// points is the array of points in the final snowflake[m
+[32m +	let v1 = new THREE.Vector3();[m
+[32m +	let v3 = new THREE.Vector3();[m
+[32m +[m
+[32m +	v1.lerpVectors(p1, p2, 1.0/3.0);[m
+[32m +	v3.lerpVectors(p1, p2, 2.0/3.0);[m
+[32m +[m
+[32m +	let v2 = triangulate(v1, v3);[m
+[32m++=======[m
+[32m+ function triangulate(p1, p2) {[m
+[32m+ 	let v1 = new THREE.Vector3();[m
+[32m+ 	v1.subVectors(p2, p1);[m
+[32m+ 	v1.z = 0.0;[m
+[32m+ [m
+[32m+ 	let v2 = new THREE.Vector3();[m
+[32m+ 	v2.x = v1.x * Math.cos(60.0) - v1.y * Math.sin(60.0);[m
+[32m+ 	v2.y = v1.x * Math.sin(60.0) + v1.y * Math.cos(60.0);[m
+[32m+ 	v2.x += p2.x; //p1.x??[m
+[32m+ 	v2.y += p2.y;[m
+[32m+ 	v2.z = 0.0;[m
+[32m+ [m
+[32m+ 	return v2;[m
+[32m+ }[m
+[32m+ [m
+[32m+ function divideLine(p1, p2, depth, points) {[m
+[32m+ 	let v1 = new THREE.Vector3();[m
+[32m+ 	let v2 = new THREE.Vector3();[m
+[32m+ [m
+[32m+ 	v1.lerpVectors(p1, p2, 1.0 / 3.0);[m
+[32m+ 	v2.lerpVectors(p1, p2, 2.0 / 3.0);[m
+[32m++>>>>>>> leos-playground[m
+[32m +[m
+[32m +	//console.log(depth);[m
+[32m +	//console.log("before: ",points);[m
+[32m +	//console.log(p1,p2);[m
+[32m +	let start = points.findIndex((element) => element == p1);[m
+[32m +	points = points.slice(0,start+1).concat([v1,v2,v3], points.slice(start+1));[m
+[32m +	//console.log("after: ",points);[m
+[32m +[m
+[32m++<<<<<<< HEAD[m
+[32m +	if(depth == 1){[m
+[32m +		return points;[m
+[32m +	}[m
+  [m
+[31m -	let v3 = triangulate(p1, p2);[m
+[32m +	//console.log("outside");[m
+[32m +	points = kochLine(p1, v1, depth-1, points);[m
+[32m +	//console.log("\nafter first\n");[m
+[32m +	//console.log(points);[m
+[32m +	points = kochLine(v1, v2, depth-1, points);[m
+[32m +	//console.log("\nafter second\n");[m
+[32m +	//console.log(points);[m
+[32m +	points = kochLine(v2, v3, depth-1, points);[m
+[32m +	//console.log("\nafter third\n");[m
+[32m +	//console.log(points);[m
+[32m +	points = kochLine(v3, p2, depth-1, points);[m
+[32m +	//console.log("\nafter fourth\n");[m
+[32m +	//console.log(points);[m
+[32m +	[m
+[32m +	return points;[m
+[32m +}[m
+  [m
+[32m +function triangulate(p1, p2){[m
+[32m +	let v1 = new THREE.Vector3();[m
+[32m +	v1.subVectors(p2, p1);[m
+[32m +[m
+[32m +	let v2 = new THREE.Vector3();[m
+[32m +	let rad = -Math.PI/3.0;[m
+[32m +	v2.x = v1.x * Math.cos(rad) - v1.y * Math.sin(rad);[m
+[32m +	v2.y = v1.x * Math.sin(rad) + v1.y * Math.cos(rad);[m
+[32m +	v2.x += p1.x;[m
+[32m +	v2.y += p1.y;[m
+[32m +[m
+[32m +	return v2;[m
+[32m++=======[m
+[32m+ 	if (depth == 1) {[m
+[32m+ 		let start = points.findIndex((element) => element == p1);[m
+[32m+ 		let end = points.findIndex((element) => element == p2);[m
+[32m+ 		points = points.slice(0, start + 1).concat([v1, v3, v2], points.slice(end));[m
+[32m+ 		//console.log(points);[m
+[32m+ 		return points;[m
+[32m+ 	}[m
+[32m+ [m
+[32m+ 	divideLine(p1, v1, depth - 1, points);[m
+[32m+ 	divideLine(v1, v2, depth - 1, points);[m
+[32m+ 	divideLine(v2, v3, depth - 1, points);[m
+[32m+ 	divideLine(v3, p2, depth - 1, points);[m
+[32m++>>>>>>> leos-playground[m
+  }[m
+  [m
+  // Initialization ==========================================================[m
+  [m
+  init();[m
+  onFractalSelect();[m
+[31m -onMaxIterations();[m
+[32m +onIterations();[m
+  id_colorSelector.value = fractalColor;[m
+  onColorSelect();[m
+[32m+ onScrollChangeColorScale();[m
