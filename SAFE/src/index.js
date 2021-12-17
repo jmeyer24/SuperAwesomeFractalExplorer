@@ -33,7 +33,7 @@ for (let key in parameters) {
 // starting settings ========================================================
 
 let inSettingMode = false;
-let initialFractal = "kochsnowflake"; // "mandelbrot";
+let initialFractal = "mandelbrot"; // "kochsnowflake"; // "mandelbrot";
 let iterations = 200;
 // in onColorSelect it converts the color to the opposite?! -> Why?!
 let fractalColor = "#2070DF"; // blue
@@ -150,7 +150,7 @@ function init() {
         parameters["f"]
       ),
     },
-    iterations: { type: "int", value: maxIterations },
+    iterations: { type: "int", value: iterations },
     color: { type: "vec3", value: fractalColor },
     colorScale: { type: "float", value: colorScale },
   };
@@ -219,19 +219,20 @@ function scroll(event) {
   if ("wheelDeltaY" in event) {
     // chrome vs. firefox
     zoom *= 1 - event.wheelDeltaY * 0.0003;
+    // add the color change effect on scroll
     if (changeColorScaleOnScroll) {
       colorScale = (colorScale + 5) % 360.0;
       mesh.material.uniforms.colorScale.value = colorScale;
     }
     if (event.wheelDeltaY < 0) {
       // zoom out
-      // maxIterations -= 1;
+      // iterations -= 1;
     } else {
       // zoom in
-      // maxIterations += 2;
-      mesh.material.uniforms.iterations.value = maxIterations;
+      // iterations += 2;
+      mesh.material.uniforms.iterations.value = iterations;
     }
-    //   uniforms['iterations']['value'] = maxIterations;
+    //   uniforms['iterations']['value'] = iterations;
   } else {
     zoom *= 1 + event.deltaY * 0.01;
   }
@@ -285,7 +286,7 @@ function onKeydown(event) {
         event.preventDefault();
         break;
       case "Tab":
-        id_bt_closeSettings.click();
+        id_bt_settings.click();
         event.preventDefault();
         break;
       case "a":
@@ -300,6 +301,9 @@ function onKeydown(event) {
       case "f":
         id_colorSelector.click();
         break;
+      case "g":
+        id_changeColorScaleOnScroll.click();
+        break;
       case "u":
         id_bt_load.click();
         break;
@@ -311,16 +315,15 @@ function onKeydown(event) {
     // when we are in explorer mode
     switch (event.key) {
       case "Tab":
-        id_bt_openSettings.click();
+        id_bt_settings.click();
         event.preventDefault();
         break;
     }
+    movePOV(event.keyCode);
   }
-  movePOV(event.keyCode);
 }
 
 function movePOV(keyCode) {
-  // independent of settings mode:
   let horizontalMovement = 0.0;
   let verticalMovement = 0.0;
   downKeys[event.keyCode] = true;
@@ -347,7 +350,7 @@ function onIterations() {
 }
 
 function onScrollChangeColorScale() {
-  changeColorScaleOnScroll = this.checked ? true : false;
+  changeColorScaleOnScroll = id_changeColorScaleOnScroll.checked ? true : false;
 }
 
 function onFractalSelect() {
@@ -410,11 +413,10 @@ function onFractalSelect() {
 function onClickSettingsMenu() {
   if (inSettingMode) {
     id_outerSettings.style.display = "none";
-    inSettingMode = false;
   } else {
     id_outerSettings.style.display = "block";
-    inSettingMode = true;
   }
+  inSettingMode = !inSettingMode;
 }
 
 function onColorSelect() {
