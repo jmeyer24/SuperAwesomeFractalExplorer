@@ -19,12 +19,12 @@ let offset = new THREE.Vector2(-2.0 * aspect, -1.5);
 
 let gui = new dat.GUI({ width: 300 });
 let parameters = {
-  a: 1.01,
-  b: 0.01,
-  c: 0.01,
-  d: 0.01,
-  e: 0.01,
-  f: 0.01,
+  a: 1.0,
+  b: 0.0,
+  c: 0.0,
+  d: 0.0,
+  e: 0.0,
+  f: 0.0,
 };
 for (let key in parameters) {
   gui.add(parameters, key, -5.0, 5.0).onChange(updateUniforms);
@@ -35,39 +35,28 @@ for (let key in parameters) {
 let inSettingMode = false;
 let initialFractal = "mandelbrot"; // "kochsnowflake"; // "mandelbrot";
 let iterations = 200;
+let maxKochsnowflakeIterations = 6;
 // in onColorSelect it converts the color to the opposite?! -> Why?!
 let fractalColor = "#2070DF"; // blue
 //let fractalColor = "#1E0064"; // initial violet
 //let fractalColor = "#66cc33"; // green
 let colorIntensity = 10.0;
 let changeColorScaleOnScroll = false;
-let downKeys = {};
 let colorScale = 240.0;
 let mouseButtonClicked = false;
 let mouseOrigin = { x: 0.0, y: 0.0 }; // mouseOrigin[0]: x-coordinate, mouseOrigin[1]: y-coordinate
 
-// html elements ============================================================
+// html elements ==============================================================
 
-let id_iterations = document.getElementById("iterations");
-let id_fractalSelector = document.getElementById("fractalSelector");
-id_fractalSelector.value = initialFractal;
-let id_bt_settings = document.getElementById("bt_settings");
 let id_outerSettings = document.getElementById("outerSettings");
-let id_colorSelector = document.getElementById("colorSelector");
-//id_colorSelector.value = initialColor; // doesn't work with rgb colors it seems
-let id_colorIntensity = document.getElementById("colorIntensity");
-let id_changeColorScaleOnScroll = document.getElementById(
-  "changeColorScaleOnScroll"
-);
 let id_bt_load = document.getElementById("bt_load");
 let id_bt_save = document.getElementById("bt_save");
 let id_body = document.getElementById("body");
+
+// html elements with event listeners =========================================
+
 canvas = document.querySelector("canvas.webgl");
-
-// event listeners ============================================================
-
-window.addEventListener("resize", windowResize, true);
-canvas.addEventListener("wheel", scroll);
+canvas.addEventListener("wheel", onScroll);
 canvas.addEventListener("mousemove", onMouseMove);
 canvas.addEventListener("mousedown", (event) => {
   if (event.button == 0) onMouseDown(event);
@@ -75,21 +64,37 @@ canvas.addEventListener("mousedown", (event) => {
 canvas.addEventListener("mouseup", (event) => {
   mouseButtonClicked = false;
 });
-document.addEventListener("keydown", onKeydown);
+
+let id_iterations = document.getElementById("iterations");
 id_iterations.addEventListener("input", onIterations);
-document.addEventListener("keyup", (event) => {
-  downKeys[event.keyCode] = false;
-});
-// "input" instead of "change" and it goes on the fly even with the mouse
-//window.addEventListener("load", onFractalSelect, false);
+
+let id_fractalSelector = document.getElementById("fractalSelector");
+id_fractalSelector.value = initialFractal;
 id_fractalSelector.addEventListener("change", onFractalSelect);
+
+let id_bt_settings = document.getElementById("bt_settings");
 id_bt_settings.addEventListener("click", onClickSettingsMenu);
+
+let id_colorSelector = document.getElementById("colorSelector");
+id_colorSelector.value = fractalColor;
 id_colorSelector.addEventListener("input", onColorSelect);
+
+let id_colorIntensity = document.getElementById("colorIntensity");
 id_colorIntensity.addEventListener("input", onColorIntensity);
+
+let id_changeColorScaleOnScroll = document.getElementById(
+  "changeColorScaleOnScroll"
+);
 id_changeColorScaleOnScroll.addEventListener(
   "change",
   onScrollChangeColorScale
 );
+
+// other event listeners ======================================================
+
+window.addEventListener("resize", windowResize, true);
+//window.addEventListener("load", onFractalSelect, false);
+document.addEventListener("keydown", onKeydown);
 
 // Setup functions ==========================================================
 
@@ -136,19 +141,11 @@ function init() {
     offset: { type: "vec2", value: offset },
     parameterSet1: {
       type: "vec3",
-      value: new THREE.Vector3(
-        parameters["a"],
-        parameters["b"],
-        parameters["c"]
-      ),
+      value: new THREE.Vector3(parameters.a, parameters.b, parameters.c),
     },
     parameterSet2: {
       type: "vec3",
-      value: new THREE.Vector3(
-        parameters["d"],
-        parameters["e"],
-        parameters["f"]
-      ),
+      value: new THREE.Vector3(parameters.d, parameters.e, parameters.f),
     },
     iterations: { type: "int", value: iterations },
     color: { type: "vec3", value: fractalColor },
@@ -214,7 +211,7 @@ function windowResize() {
 // 	}
 // }
 
-function scroll(event) {
+function onScroll(event) {
   let zoom_0 = zoom;
   if ("wheelDeltaY" in event) {
     // chrome vs. firefox
@@ -222,17 +219,14 @@ function scroll(event) {
     // add the color change effect on scroll
     if (changeColorScaleOnScroll) {
       colorScale = (colorScale + 5) % 360.0;
-      mesh.material.uniforms.colorScale.value = colorScale;
+      uniforms.colorScale.value = colorScale;
     }
     if (event.wheelDeltaY < 0) {
       // zoom out
-      // iterations -= 1;
     } else {
       // zoom in
-      // iterations += 2;
-      mesh.material.uniforms.iterations.value = iterations;
+      uniforms.iterations.value = id_iterations.value;
     }
-    //   uniforms['iterations']['value'] = iterations;
   } else {
     zoom *= 1 + event.deltaY * 0.01;
   }
@@ -240,12 +234,10 @@ function scroll(event) {
   let space = zoom - zoom_0;
   let mouseX = event.clientX / window.innerWidth;
   let mouseY = 1 - event.clientY / window.innerHeight;
-  offset = offset.add(
-    new THREE.Vector2(-mouseX * space * aspect, -mouseY * space)
-  );
+  offset.add(new THREE.Vector2(-mouseX * space * aspect, -mouseY * space));
 
-  uniforms["zoom"]["value"] = zoom;
-  uniforms["offset"]["value"] = offset;
+  uniforms.zoom.value = zoom;
+  uniforms.offset.value = offset;
 }
 
 function onMouseDown(event) {
@@ -266,12 +258,12 @@ function onMouseMove(event) {
 }
 
 function updateUniforms() {
-  uniforms["parameterSet1"]["value"] = new THREE.Vector3(
+  uniforms.parameterSet1.value = new THREE.Vector3(
     parameters["a"],
     parameters["b"],
     parameters["c"]
   );
-  uniforms["parameterSet2"]["value"] = new THREE.Vector3(
+  uniforms.parameterSet2.value = new THREE.Vector3(
     parameters["d"],
     parameters["e"],
     parameters["f"]
@@ -313,40 +305,35 @@ function onKeydown(event) {
     }
   } else {
     // when we are in explorer mode
+    // movement for onMovePOV
+    let horizontalMovement = 0.0;
+    let verticalMovement = 0.0;
     switch (event.key) {
       case "Tab":
         id_bt_settings.click();
         event.preventDefault();
         break;
+      case "ArrowLeft":
+        horizontalMovement -= 0.05;
+        break;
+      case "ArrowUp":
+        verticalMovement += 0.05;
+        break;
+      case "ArrowRight":
+        horizontalMovement += 0.05;
+        break;
+      case "ArrowDown":
+        verticalMovement -= 0.05;
+        break;
     }
-    movePOV(event.keyCode);
-  }
-}
 
-function movePOV(keyCode) {
-  let horizontalMovement = 0.0;
-  let verticalMovement = 0.0;
-  downKeys[event.keyCode] = true;
-
-  if (downKeys[37]) {
-    horizontalMovement -= 0.05;
-    console.log("test");
+    offset.add(new THREE.Vector2(horizontalMovement, verticalMovement));
   }
-  if (downKeys[39]) {
-    horizontalMovement += 0.05;
-  }
-  if (downKeys[40]) {
-    verticalMovement -= 0.05;
-  }
-  if (downKeys[38]) {
-    verticalMovement += 0.05;
-  }
-  offset = offset.add(new THREE.Vector2(horizontalMovement, verticalMovement));
 }
 
 function onIterations() {
-  iterations = id_iterations.value;
-  mesh.material.uniforms.iterations.value = iterations;
+  uniforms.iterations.value = id_iterations.value;
+  id_iterations.nextElementSibling.value = id_iterations.value;
 }
 
 function onScrollChangeColorScale() {
@@ -357,6 +344,7 @@ function onFractalSelect() {
   switch (id_fractalSelector.value) {
     case "mandelbrot":
       console.log("mandelbrot (default) was selected");
+      scene.remove(kochMesh);
       mesh.material = new THREE.ShaderMaterial({
         uniforms: uniforms,
         fragmentShader: MandelbrotFrag,
@@ -364,11 +352,11 @@ function onFractalSelect() {
       break;
     case "mandelbrotIterationChange":
       console.log("mandelbrot with changeable iterations was selected");
+      scene.remove(kochMesh);
       mesh.material = new THREE.ShaderMaterial({
         uniforms: uniforms,
         fragmentShader: MandelbrotIterationChangeFrag,
       });
-      scene.remove(kochMesh);
       break;
     case "kochsnowflake":
       console.log("kochsnowflake was selected");
@@ -382,23 +370,33 @@ function onFractalSelect() {
       let points = [];
 
       // koch line
-      points.push(new THREE.Vector3(0.5, 0.0, 0.0));
-      points.push(new THREE.Vector3(-0.5, 0.0, 0.0));
+      // points.push(new THREE.Vector3(0.5, 0.0, 0.0));
+      // points.push(new THREE.Vector3(-0.5, 0.0, 0.0));
       // koch snowflake (starting as a triangle)
-      //let rad = Math.PI/2.0;
-      //points.push( new THREE.Vector3( 0.5 * Math.cos(rad), 0.5 * Math.sin(rad), 0.0 ));
-      //rad = 7.0*Math.PI/6.0;
-      //points.push( new THREE.Vector3( 0.5 * Math.cos(rad), 0.5 * Math.sin(rad), 0.0 ));
-      //rad = 11.0*Math.PI/6.0;
-      //points.push( new THREE.Vector3( 0.5 * Math.cos(rad), 0.5 * Math.sin(rad), 0.0 ));
-      //rad = Math.PI/2.0;
-      //points.push( new THREE.Vector3( 0.5 * Math.cos(rad), 0.5 * Math.sin(rad), 0.0 ));
+      let rad = Math.PI / 2.0;
+      points.push(
+        new THREE.Vector3(0.5 * Math.cos(rad), 0.5 * Math.sin(rad), 0.0)
+      );
+      rad = (7.0 * Math.PI) / 6.0;
+      points.push(
+        new THREE.Vector3(0.5 * Math.cos(rad), 0.5 * Math.sin(rad), 0.0)
+      );
+      rad = (11.0 * Math.PI) / 6.0;
+      points.push(
+        new THREE.Vector3(0.5 * Math.cos(rad), 0.5 * Math.sin(rad), 0.0)
+      );
+      rad = Math.PI / 2.0;
+      points.push(
+        new THREE.Vector3(0.5 * Math.cos(rad), 0.5 * Math.sin(rad), 0.0)
+      );
 
       // call kochSnowflake(), a recursive function to compute the snowflake points
-      // with the initial depth of 1, e.g. only one spike
-      iterations = 5; // change it interactively, not higher than 6
-      points = kochSnowflake(points, iterations);
-      //console.log("final points: \n",points);
+      points = kochSnowflake(
+        points,
+        Math.round(
+          (maxKochsnowflakeIterations * id_iterations.value) / iterations
+        )
+      );
 
       kochGeometry.setFromPoints(points);
       kochMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
@@ -449,9 +447,8 @@ function onColorChange() {
   let placeHolderColor = new THREE.Vector3();
   placeHolderColor.copy(fractalColor);
   placeHolderColor.multiplyScalar(colorIntensity);
-  mesh.material.uniforms.color.value = placeHolderColor;
+  uniforms.color.value = placeHolderColor;
   placeHolderColor = null;
-  //console.log(fractalColor);
 }
 
 // download option preparation
@@ -547,6 +544,5 @@ function triangulate(p1, p2) {
 init();
 onFractalSelect();
 onIterations();
-id_colorSelector.value = fractalColor;
 onColorSelect();
 onScrollChangeColorScale();

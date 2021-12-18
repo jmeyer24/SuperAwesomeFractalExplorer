@@ -1,4 +1,4 @@
-export const KochsnowflakeFrag =`
+export const KochsnowflakeFrag = `
 
 precision highp float;
 uniform vec2 res;
@@ -40,4 +40,4 @@ void main(){ // gl_FragCoord in [0,1]
   //gl_FragColor = vec4(color,1.0);
 }
 
-`
+`;
