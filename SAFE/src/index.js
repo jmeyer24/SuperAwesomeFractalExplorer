@@ -1,34 +1,46 @@
 import * as THREE from "three";
-import * as dat from "dat.gui";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { GUI } from "three/examples/jsm/libs/dat.gui.module.js";
 import { sin, cos } from "mathjs";
+import { SpriteVert } from "./sprite.vert";
+import { SpriteFrag } from "./sprite.frag";
 import { MandelbrotFrag } from "./mandelbrot.frag";
 import { MandelbrotIterationChangeFrag } from "./mandelbrotIterationChange.frag";
 import { KochsnowflakeFrag } from "./kochsnowflake.frag";
 
-let camera, scene, renderer, canvas;
+let camera, scene, renderer, canvas, context;
 let gl;
 let geometry, material, mesh;
 let kochGeometry, kochMaterial, kochMesh;
 let uniforms;
 
 let aspect = window.innerWidth / window.innerHeight;
+let offset = new THREE.Vector2(-2.0 * aspect, -1.5);
 let zoom = 3.0;
 const MIN_ZOOM = 3.0;
-// TODO: const MAX_ZOOM
-let offset = new THREE.Vector2(-2.0 * aspect, -1.5);
+const MAX_ZOOM = Number.MAX_VALUE;
 
-let gui = new dat.GUI({ width: 300 });
-let parameters = {
-  a: 1.0,
-  b: 0.0,
-  c: 0.0,
-  d: 0.0,
-  e: 0.0,
-  f: 0.0,
-};
-for (let key in parameters) {
-  gui.add(parameters, key, -5.0, 5.0).onChange(updateUniforms);
-}
+//// ==========================================================================
+
+//// defining the variables
+//let directional_light, ambient_light;
+//let material_cube, material_sphere_perVertex, baseColor_sphere_perVertex;
+//let radius_sphere_perVertex,
+//  widthSegments_sphere_perVertex,
+//  heightSegments_sphere_perVertex;
+//let mesh_sphere_perVertex;
+
+//function init2() {
+//  // adding directional light
+//  directional_light = new THREE.DirectionalLight("#efebd8", 1.1);
+//  //directional_light.position.set(-1.0,2.0,1.0)
+//  scene.add(directional_light);
+
+//  // adding ambient light
+//  ambient_light = new THREE.AmbientLight("#efebd8", 0.2);
+//  scene.add(ambient_light);
+
+//// ==========================================================================
 
 // starting settings ========================================================
 
@@ -55,15 +67,15 @@ let id_body = document.getElementById("body");
 
 // html elements with event listeners =========================================
 
-canvas = document.querySelector("canvas.webgl");
-canvas.addEventListener("wheel", onScroll);
-canvas.addEventListener("mousemove", onMouseMove);
-canvas.addEventListener("mousedown", (event) => {
-  if (event.button == 0) onMouseDown(event);
-});
-canvas.addEventListener("mouseup", (event) => {
-  mouseButtonClicked = false;
-});
+// canvas = document.querySelector("canvas.webgl");
+// canvas.addEventListener("wheel", onScroll);
+// canvas.addEventListener("mousemove", onMouseMove);
+// canvas.addEventListener("mousedown", (event) => {
+//   if (event.button == 0) onMouseDown(event);
+// });
+// canvas.addEventListener("mouseup", (event) => {
+//   mouseButtonClicked = false;
+// });
 
 let id_iterations = document.getElementById("iterations");
 id_iterations.addEventListener("input", onIterations);
@@ -96,40 +108,123 @@ window.addEventListener("resize", windowResize, true);
 //window.addEventListener("load", onFractalSelect, false);
 document.addEventListener("keydown", onKeydown);
 
-// Setup functions ==========================================================
+// initialization ============================================================
 
-function setup() {
-  camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
+function init() {
+  /*
+   * setup renderer
+   */
 
-  //assign earlier in the document to limit mouse wheel action to canvas
+  //webgl2 renderer
+  canvas = document.querySelector("canvas");
+  // canvas = document.createElement("canvas");
+  context = canvas.getContext("webgl2", { antialias: true, alpha: false });
+  renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+    context: context,
+    antialias: false,
+    precision: "highp",
+  });
+  // get and set window dimension for the renderer
+  //renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+  // add dom object(renderer) to the body section of the index.html
+  document.body.appendChild(renderer.domElement);
+
+  /*
+   * setup camera and controls
+   */
+
+  // adding a camera OthographicCamera(left,right,top,bottom,near,far) for 2D
+  // camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
+
+  // adding a camera PerspectiveCamera( fov, aspect, near, far) for 3D
+  camera = new THREE.PerspectiveCamera(
+    70,
+    window.innerWidth / window.innerHeight,
+    0.01,
+    100
+  );
+
+  // set the camera position x,y,z in the scene
+  camera.position.set(0, 0, 2);
+
+  // add controls to the camera
+  // TODO: can we change this, so the offset and the position of the shader is controlled, not the mesh or the scene?
+  // const controls = new OrbitControls(
+  //   camera,
+  //   document.getElementsByClassName("webgl")
+  // );
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.update();
+
+  /*
+   * setup GUI
+   */
+
+  const gui = new GUI({ width: 200 });
+  gui.close();
+  let parameters = {
+    a: 1.0,
+    b: 0.0,
+    c: 0.0,
+    d: 0.0,
+    e: 0.0,
+    f: 0.0,
+  };
+  for (let key in parameters) {
+    gui.add(parameters, key, -5.0, 5.0).onChange(function () {
+      uniforms.parameterSet1.value = new THREE.Vector3(
+        parameters.a,
+        parameters.b,
+        parameters.c
+      );
+      uniforms.parameterSet2.value = new THREE.Vector3(
+        parameters.d,
+        parameters.e,
+        parameters.f
+      );
+    });
+  }
+
+  // assign earlier in the document to limit mouse wheel action to canvas
   //   canvas = document.querySelector('canvas.webgl');
-
-  scene = new THREE.Scene();
 
   // removes the canvas???
   //  gl = document.getElementById("fractalCanvas").getContext("webgl");
   //  gl.clearColor(0.0,0.0,0.0,1.0);
   //  gl.clear(gl.COLOR_BUFFER_BIT);
 
-  renderer = new THREE.WebGLRenderer({
-    canvas: canvas,
-    antialias: false,
-    precision: "highp",
+  /*
+   * setup the scene with a plane and grid
+   */
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x636363);
+  // scene.background = new THREE.Color(0xffffff);
+  // scene.background = new THREE.Color(0x000000);
+
+  // geometry = new THREE.BoxGeometry(1, 1, 1);
+  geometry = new THREE.PlaneGeometry(1, 1);
+  material = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    side: THREE.DoubleSide,
   });
-  // renderer.setSize( window.innerWidth, window.innerHeight-2 );
-  // let canvas = document.getElementById("canvas");
-  renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
-  document.body.appendChild(renderer.domElement);
-  initSettings();
-}
+  mesh = new THREE.Mesh(geometry, material);
+  scene.add(mesh);
 
-function animate() {
-  renderer.render(scene, camera);
-  requestAnimationFrame(animate);
-}
+  // const sprite = new THREE.Sprite(
+  //   new THREE.SpriteMaterial({ color: 0x0000f0 })
+  // );
+  // sprite.scale.set(2, 2, 1); // window.width, window.height, 1);
+  // scene.add(sprite);
 
-function init() {
-  setup();
+  const gridHelper = new THREE.GridHelper(50, 50);
+  scene.add(gridHelper);
+
+  /*
+   * setup shader uniforms
+   */
 
   uniforms = {
     res: {
@@ -150,22 +245,38 @@ function init() {
     iterations: { type: "int", value: iterations },
     color: { type: "vec3", value: fractalColor },
     colorScale: { type: "float", value: colorScale },
+
+    scale: { type: "v3", value: new THREE.Vector3() },
+    cur_time: { type: "f", value: 1.0 },
+    beg_time: { type: "f", value: 1.0 },
   };
-
-  geometry = new THREE.PlaneBufferGeometry(2, 2);
-  material = new THREE.ShaderMaterial({
-    uniforms: uniforms,
-    fragmentShader: KochsnowflakeFrag,
-  });
-  mesh = new THREE.Mesh(geometry, material);
-  scene.add(mesh);
-
-  animate();
 }
 
-function initSettings() {
-  // what comes here?
+function animate() {
+  requestAnimationFrame(animate);
+  render();
+  // renderer.render(scene, camera);
 }
+
+function render() {
+  // // TODO: apply parameters and color chosen in the gui to the different uniforms of the spheres!
+  // let geometry_sphere_vertex = new THREE.SphereBufferGeometry(
+  //   radius_sphere_perVertex,
+  //   widthSegments_sphere_perVertex,
+  //   heightSegments_sphere_perVertex
+  // );
+  // updateGeometry(mesh_sphere_perVertex, geometry_sphere_vertex);
+  renderer.render(scene, camera);
+}
+
+// function updateGeometry(mesh, geometry) {
+//   // adapted from https://github.com/mrdoob/three.js/blob/dev/docs/scenes/geometry-browser.html
+//   if (geometry.isGeometry) {
+//     geometry = new THREE.BufferGeometry().fromGeometry(geometry);
+//   }
+//   mesh.geometry.dispose();
+//   mesh.geometry = geometry;
+// }
 
 // Event functions ================================================
 
@@ -211,34 +322,34 @@ function windowResize() {
 // 	}
 // }
 
-function onScroll(event) {
-  let zoom_0 = zoom;
-  if ("wheelDeltaY" in event) {
-    // chrome vs. firefox
-    zoom *= 1 - event.wheelDeltaY * 0.0003;
-    // add the color change effect on scroll
-    if (changeColorScaleOnScroll) {
-      colorScale = (colorScale + 5) % 360.0;
-      uniforms.colorScale.value = colorScale;
-    }
-    if (event.wheelDeltaY < 0) {
-      // zoom out
-    } else {
-      // zoom in
-      uniforms.iterations.value = id_iterations.value;
-    }
-  } else {
-    zoom *= 1 + event.deltaY * 0.01;
-  }
+// function onScroll(event) {
+//   let zoom_0 = zoom;
+//   if ("wheelDeltaY" in event) {
+//     // chrome vs. firefox
+//     zoom *= 1 - event.wheelDeltaY * 0.0003;
+//     // add the color change effect on scroll
+//     if (changeColorScaleOnScroll) {
+//       colorScale = (colorScale + 5) % 360.0;
+//       uniforms.colorScale.value = colorScale;
+//     }
+//     if (event.wheelDeltaY < 0) {
+//       // zoom out
+//     } else {
+//       // zoom in
+//       uniforms.iterations.value = id_iterations.value;
+//     }
+//   } else {
+//     zoom *= 1 + event.deltaY * 0.01;
+//   }
 
-  let space = zoom - zoom_0;
-  let mouseX = event.clientX / window.innerWidth;
-  let mouseY = 1 - event.clientY / window.innerHeight;
-  offset.add(new THREE.Vector2(-mouseX * space * aspect, -mouseY * space));
+//   let space = zoom - zoom_0;
+//   let mouseX = event.clientX / window.innerWidth;
+//   let mouseY = 1 - event.clientY / window.innerHeight;
+//   offset.add(new THREE.Vector2(-mouseX * space * aspect, -mouseY * space));
 
-  uniforms.zoom.value = zoom;
-  uniforms.offset.value = offset;
-}
+//   uniforms.zoom.value = zoom;
+//   uniforms.offset.value = offset;
+// }
 
 function onMouseDown(event) {
   mouseButtonClicked = true;
@@ -255,19 +366,6 @@ function onMouseMove(event) {
     );
     console.log(zoom);
   }
-}
-
-function updateUniforms() {
-  uniforms.parameterSet1.value = new THREE.Vector3(
-    parameters["a"],
-    parameters["b"],
-    parameters["c"]
-  );
-  uniforms.parameterSet2.value = new THREE.Vector3(
-    parameters["d"],
-    parameters["e"],
-    parameters["f"]
-  );
 }
 
 function onKeydown(event) {
@@ -343,27 +441,36 @@ function onScrollChangeColorScale() {
 function onFractalSelect() {
   switch (id_fractalSelector.value) {
     case "mandelbrot":
-      console.log("mandelbrot (default) was selected");
+      // console.log("mandelbrot (default) was selected");
       scene.remove(kochMesh);
+      mesh.visible = true;
       mesh.material = new THREE.ShaderMaterial({
         uniforms: uniforms,
+        // vertexShader: SpriteVert,
+        // fragmentShader: SpriteFrag,
         fragmentShader: MandelbrotFrag,
+        side: THREE.DoubleSide,
+        transparent: true,
+        // blending: THREE.AdditiveBlending,
+        // wireframe: true,
       });
       break;
+
     case "mandelbrotIterationChange":
-      console.log("mandelbrot with changeable iterations was selected");
+      // console.log("mandelbrot with changeable iterations was selected");
       scene.remove(kochMesh);
+      mesh.visible = true;
       mesh.material = new THREE.ShaderMaterial({
         uniforms: uniforms,
         fragmentShader: MandelbrotIterationChangeFrag,
+        side: THREE.DoubleSide,
+        transparent: true,
       });
       break;
+
     case "kochsnowflake":
-      console.log("kochsnowflake was selected");
-      mesh.material = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        fragmentShader: KochsnowflakeFrag,
-      });
+      // console.log("kochsnowflake was selected");
+      mesh.visible = false;
 
       // implement koch line with 2 starting points
       kochGeometry = new THREE.BufferGeometry();
@@ -403,6 +510,7 @@ function onFractalSelect() {
       kochMesh = new THREE.Line(kochGeometry, kochMaterial);
       scene.add(kochMesh);
       break;
+
     default:
       console.log("no fractal selected");
   }
@@ -542,6 +650,7 @@ function triangulate(p1, p2) {
 // Initialization ==========================================================
 
 init();
+animate();
 onFractalSelect();
 onIterations();
 onColorSelect();

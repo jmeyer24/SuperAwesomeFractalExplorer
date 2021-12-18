@@ -1,5 +1,5 @@
 //language=GLSL
-export const MandelbrotFrag =`
+export const MandelbrotFrag = `
 
 precision highp float;
 uniform vec2 res;
@@ -60,4 +60,4 @@ void main() {
   gl_FragColor = getMandelbrot(c);
 }
 
-`
+`;
