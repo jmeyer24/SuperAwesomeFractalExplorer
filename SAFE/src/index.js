@@ -1,13 +1,18 @@
+// utilities
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GUI } from "three/examples/jsm/libs/dat.gui.module.js";
 import { sin, cos } from "mathjs";
-import { VaryingVert } from "./varying.vert";
-import { SpriteVert } from "./sprite.vert";
-import { SpriteFrag } from "./sprite.frag";
-import { MandelbrotFrag } from "./mandelbrot.frag";
-import { MandelbrotIterationChangeFrag } from "./mandelbrotIterationChange.frag";
-import { KochsnowflakeFrag } from "./kochsnowflake.frag";
+
+// fractal shaders
+import { MandelbrotFrag } from "./fractalShaders/mandelbrot.frag";
+import { MandelbrotIterationChangeFrag } from "./fractalShaders/mandelbrotIterationChange.frag";
+import { KochsnowflakeFrag } from "./fractalShaders/kochsnowflake.frag";
+
+// other
+import { VaryingVert } from "./other/varying.vert";
+import { SpriteVert } from "./other/sprite.vert";
+import { SpriteFrag } from "./other/sprite.frag";
 
 let camera, scene, renderer, canvas, context;
 let geometry, material, mesh;
