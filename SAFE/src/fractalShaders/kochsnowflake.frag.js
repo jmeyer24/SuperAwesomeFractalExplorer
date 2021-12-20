@@ -11,9 +11,9 @@ export const KochsnowflakeFrag = `
 
 precision highp float;
 uniform vec2 res;
-// uniform float aspect;
-// uniform float zoom;
-// uniform vec2 offset;
+uniform float aspect;
+uniform float zoom;
+uniform vec2 offset;
 
 // gui parameters
 uniform int iterations;
@@ -66,9 +66,7 @@ float kochsnowflake(vec2 uv) {
 
 void main() {
 	// get the uv coordinates
-	// same as the one in mandelbrotIterationsChange.frag.js
-	// vec2 uv = zoom * vec2(aspect, 1.0) * gl_FragCoord.xy / res + offset;
-    vec2 uv = (gl_FragCoord.xy-.5*res.xy)/res.y;
+	vec2 uv = zoom * 0.3 * (2.0*gl_FragCoord.xy-res.xy)/res.y + offset;
 
 	// compute the current alpha value
 	vec3 brightness = vec3(0);

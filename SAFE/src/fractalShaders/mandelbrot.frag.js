@@ -8,9 +8,6 @@ uniform float zoom;
 uniform vec2 offset;
 
 // gui parameters
-uniform vec3 parameterSet1;
-uniform vec3 parameterSet2;
-uniform vec3 color;
 uniform int iterations;
 uniform float colorScale;
 
@@ -37,30 +34,33 @@ vec3 hsv2rgb(float hue, float saturation, float brightness) {
   }
 }
 
-vec3 mandelbrot(vec2 c) {
-  vec3 col = vec3(0.0);
-  float a = 0.0, b = 0.0;
-  float colorScale = 60.0; // NOTE: Change this value to create different color
+vec3 mandelbrot(vec2 uv) {
+	vec2 initialUV = uv;
+	vec3 col = vec3(0.0);
+	float colorScale = 60.0; // NOTE: Change this value to create different color
 
-  for (int i = 0; i < iterations; i++) {
-     float aNew = a*a - b*b + c.x;
-     float bNew = 2.0 * a * b + c.y;
-     if (aNew > 12.0 || bNew > 12.0) {
-        // not part of the mandelbrot set -> colored
-        col = hsv2rgb(float(i+1)/float(iterations) * 360.0 + colorScale, 1.0, 1.0);
-        return col;
-     }
-     a = aNew;
-     b = bNew;
-  }
+	for (int i = 0; i < iterations; i++) {
+		// z_n+1 = z^2 + c
+		uv = vec2(uv.x*uv.x - uv.y*uv.y, 2.0 * uv.x * uv.y);
+		uv += initialUV;
 
-  return col;
+		// not part of the mandelbrot set -> colored
+		if (uv.x > 12.0 || uv.y > 12.0) {
+			float hue = float(i+1)/float(iterations) * 360.0 + colorScale;
+			col = hsv2rgb(hue, 1.0, 1.0);
+			return col;
+		}
+	}
+
+	// part of the mandelbrot set -> black
+	return col;
 }
 
 void main() {
-  vec2 uv = zoom * vec2(aspect, 1.0) * gl_FragCoord.xy / res + offset;
+	// vec2 uv = zoom * vec2(aspect, 1.0) * gl_FragCoord.xy / res + offset;
+	vec2 uv = zoom * (2.0*gl_FragCoord.xy-res.xy)/res.y + offset;
 
-  gl_FragColor = vec4(mandelbrot(uv), 1.0);
+	gl_FragColor = vec4(mandelbrot(uv), 1.0);
 }
 
 `;

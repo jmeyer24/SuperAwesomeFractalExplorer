@@ -8,20 +8,22 @@ import { sin, cos } from "mathjs";
 import { MandelbrotFrag } from "./fractalShaders/mandelbrot.frag";
 import { MandelbrotIterationChangeFrag } from "./fractalShaders/mandelbrotIterationChange.frag";
 import { KochsnowflakeFrag } from "./fractalShaders/kochsnowflake.frag";
+import { JuliaSetFrag } from "./fractalShaders/juliaset.frag";
 
 // other
 import { VaryingVert } from "./other/varying.vert";
 import { SpriteVert } from "./other/sprite.vert";
 import { SpriteFrag } from "./other/sprite.frag";
 
-let camera, scene, renderer, canvas, context;
+let camera, controls;
+let scene, renderer, canvas, context;
 let geometry, material, mesh;
-let kochGeometry, kochMaterial, kochMesh;
 let uniforms;
 
 let aspect = window.innerWidth / window.innerHeight;
-let offset = new THREE.Vector2(-2.0 * aspect, -1.5);
-let zoom = 3.0;
+// let offset = new THREE.Vector2(-2.0 * aspect, -1.5);
+let offset = new THREE.Vector2();
+let zoom = 1.8;
 // TODO: apply zoom updating for resolution resetting on-the-fly
 const MIN_ZOOM = 3.0;
 const MAX_ZOOM = Number.MAX_VALUE;
@@ -29,9 +31,10 @@ const MAX_ZOOM = Number.MAX_VALUE;
 // starting settings ========================================================
 
 let inSettingMode = false;
-let initialFractal = "mandelbrot"; // "kochsnowflake"; // "mandelbrot";
-let iterations = 200;
-let maxKochsnowflakeIterations = 6;
+let previousFractal = "";
+const initialFractal = "juliaset"; // "kochsnowflake"; // "mandelbrot";
+const iterations = 200;
+const maxKochsnowflakeIterations = 20;
 // let fractalColor = "#2070DF"; // blue
 // let fractalColor = "#1E0064"; // initial violet
 // let fractalColor = "#66cc33"; // green
@@ -122,7 +125,7 @@ function init() {
   //   camera,
   //   document.getElementsByClassName("webgl")
   // );
-  const controls = new OrbitControls(camera, renderer.domElement);
+  controls = new OrbitControls(camera, renderer.domElement);
   controls.update();
 
   /*
@@ -155,18 +158,20 @@ function init() {
   }
 
   /*
-   * setup the scene with a plane and grid
+   * setup the scene with a plane, a box and a grid
    */
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x636363);
 
-  // geometry = new THREE.BoxGeometry(1, 1, 1);
-  geometry = new THREE.PlaneGeometry(1, 1);
   material = new THREE.MeshBasicMaterial({
     color: 0xffffff,
     side: THREE.DoubleSide,
   });
+
+  geometry = new THREE.PlaneGeometry(1, 1);
+  // TODO: merge multiple geometries?
+  // geometry.mergeBufferGeometries(new THREE.PlaneGeometry(1, 1));
   mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
 
@@ -199,6 +204,8 @@ function init() {
     color: { type: "c", value: fractalColor },
     colorIntensity: { type: "float", value: colorIntensity },
     colorScale: { type: "float", value: colorScale },
+    trapR: { type: "float", value: 1e20 },
+    startC: { type: "vec2", value: new THREE.Vector2(-0.835, -0.2321) }, // -0.8, 0.156) },
   };
 
   /*
@@ -247,6 +254,13 @@ function onKeydown(event) {
         break;
       case "a":
         id_fractalSelector.focus();
+        id_fractalSelector.selectedIndex++;
+        onFractalSelect();
+        break;
+      case "A":
+        id_fractalSelector.focus();
+        id_fractalSelector.selectedIndex--;
+        onFractalSelect(event.key);
         break;
       case "s":
         id_iterations.focus();
@@ -277,16 +291,20 @@ function onKeydown(event) {
         id_bt_settings.click();
         event.preventDefault();
         break;
-      case "ArrowLeft":
+      // case "ArrowLeft":
+      case "h":
         horizontalMovement -= 0.05;
         break;
-      case "ArrowUp":
+      // case "ArrowUp":
+      case "k":
         verticalMovement += 0.05;
         break;
-      case "ArrowRight":
+      // case "ArrowRight":
+      case "l":
         horizontalMovement += 0.05;
         break;
-      case "ArrowDown":
+      // case "ArrowDown":
+      case "j":
         verticalMovement -= 0.05;
         break;
     }
@@ -299,11 +317,37 @@ function onIterations() {
   id_iterations.nextElementSibling.value = id_iterations.value;
 }
 
+function onChangeFromToKoch(curFrac, preFrac) {
+  let exponent = 0.0;
+  let max = iterations;
+  let min = 1.0;
+  if (preFrac == "kochsnowflake") {
+    exponent = 1.0;
+    if (id_iterations.value == 0.0) {
+      id_iterations.value = 1.0;
+    }
+    id_iterations.max = max;
+  } else if (curFrac == "kochsnowflake") {
+    exponent = -1.0;
+    max = maxKochsnowflakeIterations;
+    min = 0.0;
+  }
+  id_iterations.value = Math.round(
+    id_iterations.value *
+      Math.pow(iterations / maxKochsnowflakeIterations, exponent)
+  );
+  id_iterations.max = max;
+  id_iterations.min = min;
+  onIterations();
+}
+
 function onScrollChangeColorScale() {
   changeColorScaleOnScroll = id_changeColorScaleOnScroll.checked ? true : false;
 }
 
-function onFractalSelect() {
+function onFractalSelect(key = "") {
+  onChangeFromToKoch(id_fractalSelector.value, previousFractal);
+  previousFractal = id_fractalSelector.value;
   switch (id_fractalSelector.value) {
     case "mandelbrot":
       // mesh.visible = true;
@@ -316,6 +360,7 @@ function onFractalSelect() {
         // fragmentShader: SpriteFrag,
         // wireframe: true,
       });
+      // controls.enableRotation = false;
       break;
 
     case "mandelbrotIterationChange":
@@ -334,10 +379,24 @@ function onFractalSelect() {
         fragmentShader: KochsnowflakeFrag,
         side: THREE.DoubleSide,
       });
+      // id_iterations.max = maxKochsnowflakeIterations;
+      break;
+
+    case "juliaset":
+      mesh.material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        fragmentShader: JuliaSetFrag,
+        side: THREE.DoubleSide,
+      });
       break;
 
     default:
-      console.log("no fractal selected");
+      if (key == "A") {
+        id_fractalSelector.selectedIndex = id_fractalSelector.length - 1;
+      } else {
+        id_fractalSelector.selectedIndex = 0;
+      }
+      onFractalSelect();
   }
 }
 

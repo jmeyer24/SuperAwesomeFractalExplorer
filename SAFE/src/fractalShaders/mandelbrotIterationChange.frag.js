@@ -55,12 +55,12 @@ float mandelbrot(vec2 complexNumber){
 }
 
 void main(){ // gl_FragCoord in [0,1]
-  vec2 uv = zoom * vec2(aspect, 1.0) * gl_FragCoord.xy / res + offset;
+	vec2 uv = zoom * (2.0*gl_FragCoord.xy-res.xy)/res.y + offset;
 
-  vec3 brightness = vec3(0);
-  brightness += 1.0 - mandelbrot(uv);
+	vec3 brightness = vec3(0);
+	brightness += 1.0 - mandelbrot(uv);
 
-  gl_FragColor = vec4(pow(brightness, colorIntensity*abs(1.-color)), 1.0);
+	gl_FragColor = vec4(pow(brightness, colorIntensity*abs(1.-color)), 1.0);
 }
 
 `;
