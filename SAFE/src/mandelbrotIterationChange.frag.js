@@ -1,4 +1,4 @@
-export const MandelbrotIterationChangeFrag =`
+export const MandelbrotIterationChangeFrag = `
 
 precision highp float;
 uniform vec2 res;
@@ -11,6 +11,7 @@ uniform vec3 parameterSet1;
 uniform vec3 parameterSet2;
 uniform int iterations;
 uniform vec3 color;
+uniform float colorIntensity;
 
 vec2 complexMultiplikation (vec2 a, vec2 b){
   return vec2(a.x*b.x - a.y*b.y, a.x*b.y + b.x*a.y);
@@ -55,10 +56,11 @@ float mandelbrot(vec2 complexNumber){
 
 void main(){ // gl_FragCoord in [0,1]
   vec2 uv = zoom * vec2(aspect, 1.0) * gl_FragCoord.xy / res + offset;
-  float s = 1.0 - mandelbrot(uv);
 
-  vec3 coord = vec3(s, s, s);
-  gl_FragColor = vec4(pow(coord, color), 1.0);
+  vec3 brightness = vec3(0);
+  brightness += 1.0 - mandelbrot(uv);
+
+  gl_FragColor = vec4(pow(brightness, colorIntensity*abs(1.-color)), 1.0);
 }
 
-`
+`;

@@ -37,27 +37,30 @@ vec3 hsv2rgb(float hue, float saturation, float brightness) {
   }
 }
 
-vec4 getMandelbrot(vec2 c) {
+vec3 mandelbrot(vec2 c) {
+  vec3 col = vec3(0.0);
   float a = 0.0, b = 0.0;
-  // float colorScale = 60.0; // NOTE: Change this value to create different color
+  float colorScale = 60.0; // NOTE: Change this value to create different color
 
   for (int i = 0; i < iterations; i++) {
-     float aNew = a*a - b*b + c.x; //- (c.x * sin(float(i)/1000.0));
+     float aNew = a*a - b*b + c.x;
      float bNew = 2.0 * a * b + c.y;
      if (aNew > 12.0 || bNew > 12.0) {
         // not part of the mandelbrot set -> colored
-        vec3 col = hsv2rgb(float(i+1)/float(iterations) * 360.0 + colorScale, 1.0, 1.0);
-        return vec4(col.r, col.g, col.b, 1.0);
+        col = hsv2rgb(float(i+1)/float(iterations) * 360.0 + colorScale, 1.0, 1.0);
+        return col;
      }
      a = aNew;
      b = bNew;
   }
-  return vec4(0.0, 0.0, 0.0, 1.0);
+
+  return col;
 }
 
 void main() {
-  vec2 c = zoom * vec2(aspect, 1.0) * gl_FragCoord.xy / res + offset;
-  gl_FragColor = getMandelbrot(c);
+  vec2 uv = zoom * vec2(aspect, 1.0) * gl_FragCoord.xy / res + offset;
+
+  gl_FragColor = vec4(mandelbrot(uv), 1.0);
 }
 
 `;

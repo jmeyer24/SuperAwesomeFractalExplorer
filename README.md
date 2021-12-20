@@ -58,3 +58,6 @@ In the respective folders with the name "Setup..." you can find different setups
 The Mandelbrot Explorer is taken from the source code of the following website:
 https://medium.com/@SereneBiologist/rendering-escape-fractals-in-three-js-68c96b385a49
 https://austeretriceratops.github.io/EscapeFractal/
+
+Didn't really understand all the folding of the space, but hey, helps with the snowflake anyway
+https://www.youtube.com/watch?v=il_Qg9AqQkE
