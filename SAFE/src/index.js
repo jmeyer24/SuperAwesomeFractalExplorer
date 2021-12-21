@@ -9,6 +9,14 @@ import { MandelbrotFrag } from "./fractalShaders/mandelbrot.frag";
 import { MandelbrotIterationChangeFrag } from "./fractalShaders/mandelbrotIterationChange.frag";
 import { KochsnowflakeFrag } from "./fractalShaders/kochsnowflake.frag";
 import { JuliaSetFrag } from "./fractalShaders/juliaset.frag";
+import { MandelbulbFrag } from "./fractalShaders/mandelbulb.frag";
+const shaders = [
+  "mandelbrot",
+  "mandelbrotIterationChange",
+  "kochsnowflake",
+  "juliaset",
+  "mandelbulb",
+];
 
 // other
 import { VaryingVert } from "./other/varying.vert";
@@ -27,12 +35,16 @@ let zoom = 1.8;
 // TODO: apply zoom updating for resolution resetting on-the-fly
 const MIN_ZOOM = 3.0;
 const MAX_ZOOM = Number.MAX_VALUE;
+// TODO: only for mandelbulb?
+// https://stackoverflow.com/questions/48384564/webgl-glsl-time-variable-similar-to-shadertoy
+// const timeLocation = context.getUniformLocation(program, "time");
+// context.uniform1f(timeLocation, someTimeValue);
 
 // starting settings ========================================================
 
 let inSettingMode = false;
 let previousFractal = "";
-const initialFractal = "juliaset"; // "kochsnowflake"; // "mandelbrot";
+const initialFractal = "mandelbulb"; // "juliaset"; // "kochsnowflake"; // "mandelbrot";
 const iterations = 200;
 const maxKochsnowflakeIterations = 20;
 // let fractalColor = "#2070DF"; // blue
@@ -56,6 +68,13 @@ let id_iterations = document.getElementById("iterations");
 id_iterations.addEventListener("input", onIterations);
 
 let id_fractalSelector = document.getElementById("fractalSelector");
+// add all shaders to the selector
+for (let idx in shaders) {
+  let option = document.createElement("option");
+  option.value = shaders[idx];
+  option.innerHTML = shaders[idx];
+  id_fractalSelector.appendChild(option);
+}
 id_fractalSelector.value = initialFractal;
 id_fractalSelector.addEventListener("change", onFractalSelect);
 
@@ -169,7 +188,8 @@ function init() {
     side: THREE.DoubleSide,
   });
 
-  geometry = new THREE.PlaneGeometry(1, 1);
+  geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+  // geometry = new THREE.PlaneGeometry(1, 1);
   // TODO: merge multiple geometries?
   // geometry.mergeBufferGeometries(new THREE.PlaneGeometry(1, 1));
   mesh = new THREE.Mesh(geometry, material);
@@ -206,6 +226,7 @@ function init() {
     colorScale: { type: "float", value: colorScale },
     trapR: { type: "float", value: 1e20 },
     startC: { type: "vec2", value: new THREE.Vector2(-0.835, -0.2321) }, // -0.8, 0.156) },
+    time: { type: "double", value: Date.now() },
   };
 
   /*
@@ -219,6 +240,7 @@ function init() {
 }
 
 function animate() {
+  uniforms.time = Date.now();
   requestAnimationFrame(animate);
   render();
 }
@@ -386,6 +408,14 @@ function onFractalSelect(key = "") {
       mesh.material = new THREE.ShaderMaterial({
         uniforms: uniforms,
         fragmentShader: JuliaSetFrag,
+        side: THREE.DoubleSide,
+      });
+      break;
+
+    case "mandelbulb":
+      mesh.material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        fragmentShader: MandelbulbFrag,
         side: THREE.DoubleSide,
       });
       break;
