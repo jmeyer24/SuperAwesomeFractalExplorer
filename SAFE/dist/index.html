@@ -17,24 +17,27 @@
         <div id="outerSettings">
             <div id="innerSettings">
                 <h1>Settings</h1>
-                <div class="separator"></div>
 
                 <form class="settings_form">
 					<h2>Fractal Options</h2>
+					<div class="separator"></div>
 
 					<label for="fractalSelector">Fractal (a)</label><br>
-                    <select name="fractalSelector" id="fractalSelector" size=1></select><br><br>
-                    <label for="iterations">Iterations (s)</label><br>
-                    <input type="range" class="slider" id="iterations" name="iterations" value=50 min="1" max="200">
-					<output>50</output><br><br>
+					<select name="fractalSelector" id="fractalSelector" size=1></select><br><br>
+					<label for="iterations">Iterations (s)</label><br>
+					<input type="range" class="slider" id="iterations" name="iterations">
+					<output></output><br><br>
 					<label for="colorIntensity">Color Intensity (d)</label><br>
 					<input type="range" class="slider" id="colorIntensity" name="colorIntensity" value=10 min="1" max="20">
 					<output>10</output><br><br>
 					<label for="colorSelector">Color Picker (f)</label><br>
 					<input type="color" id="colorSelector" name="colorSelector"></input><br><br>
-                    <input type="checkbox" id="changeColorScaleOnScroll">
-                    <label for="changeColorScaleOnScroll">Color change on scroll (g)</label>
+					<input type="checkbox" id="changeColorScaleOnScroll">
+					<label for="changeColorScaleOnScroll">Color change on scroll (g)</label>
+
 					<h2>Misc</h2>
+					<div class="separator"></div>
+
                     <!--input type="submit" value="Reset/Load"-->
 					<label for="bt_load">Reload the fractal (u)</label><br>
 					<button id="bt_load">Reset/Load</button><br><br>
@@ -45,6 +48,7 @@
                 <div>
                     <h2>Help</h2>
                     <div class="separator"></div>
+
                     <p><b>(x)</b><br>The letter in parantheses defines the key for executing or focusing on the option.</p>
                     <p><b>Shortcuts</b><br>Tab: open/close the Settings window<p>
                 </div>

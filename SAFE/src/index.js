@@ -35,7 +35,7 @@ let zoom = 1.8;
 // TODO: apply zoom updating for resolution resetting on-the-fly
 const MIN_ZOOM = 3.0;
 const MAX_ZOOM = Number.MAX_VALUE;
-// TODO: only for mandelbulb?
+// TODO: initialize resolution 3d for 3D fractals like mandelbulb
 // https://stackoverflow.com/questions/48384564/webgl-glsl-time-variable-similar-to-shadertoy
 // const timeLocation = context.getUniformLocation(program, "time");
 // context.uniform1f(timeLocation, someTimeValue);
@@ -44,7 +44,7 @@ const MAX_ZOOM = Number.MAX_VALUE;
 
 let inSettingMode = false;
 let previousFractal = "";
-const initialFractal = "mandelbulb"; // "juliaset"; // "kochsnowflake"; // "mandelbrot";
+const initialFractal = "mandelbrot"; // "mandelbulb"; // "juliaset"; // "kochsnowflake"; // "mandelbrot";
 const iterations = 200;
 const maxKochsnowflakeIterations = 20;
 // let fractalColor = "#2070DF"; // blue
@@ -65,6 +65,7 @@ let id_body = document.getElementById("body");
 // html elements with event listeners =========================================
 
 let id_iterations = document.getElementById("iterations");
+id_iterations.value = iterations / 2.0;
 id_iterations.addEventListener("input", onIterations);
 
 let id_fractalSelector = document.getElementById("fractalSelector");
@@ -188,8 +189,8 @@ function init() {
     side: THREE.DoubleSide,
   });
 
-  geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-  // geometry = new THREE.PlaneGeometry(1, 1);
+  // geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+  geometry = new THREE.PlaneGeometry(1, 1);
   // TODO: merge multiple geometries?
   // geometry.mergeBufferGeometries(new THREE.PlaneGeometry(1, 1));
   mesh = new THREE.Mesh(geometry, material);
@@ -248,7 +249,7 @@ function animate() {
 function render() {
   // TODO:
   // we might we able to not insert any object in the scene but apply the material to the whole scene with only a sprite?!?!
-  scene.overrideMaterial = mesh.material;
+  // scene.overrideMaterial = mesh.material;
 
   renderer.render(scene, camera);
 }
@@ -401,7 +402,6 @@ function onFractalSelect(key = "") {
         fragmentShader: KochsnowflakeFrag,
         side: THREE.DoubleSide,
       });
-      // id_iterations.max = maxKochsnowflakeIterations;
       break;
 
     case "juliaset":
