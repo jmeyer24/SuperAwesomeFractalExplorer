@@ -45,7 +45,7 @@ const MAX_ZOOM = Number.MAX_VALUE;
 
 let inSettingMode = false;
 let previousFractal = "";
-const initialFractal = "mandelbrot"; // "mandelbulb"; // "juliaset"; // "kochsnowflake"; // "mandelbrot";
+const initialFractal = "kochsnowflake"; // "mandelbrot"; // "mandelbulb"; // "juliaset"; // "kochsnowflake"; // "mandelbrot";
 const iterations = 200;
 const maxKochsnowflakeIterations = 20;
 // let fractalColor = "#2070DF"; // blue
@@ -347,20 +347,21 @@ function onKeydown(event) {
         id_bt_settings.click();
         event.preventDefault();
         break;
-      // case "ArrowLeft":
-      case "h":
+      case "ArrowLeft":
+        // case "h":
+        event.preventDefault(); // that toggles the controls
         horizontalMovement -= 0.05;
         break;
-      // case "ArrowUp":
-      case "k":
+      case "ArrowUp":
+        // case "k":
         verticalMovement += 0.05;
         break;
-      // case "ArrowRight":
-      case "l":
+      case "ArrowRight":
+        // case "l":
         horizontalMovement += 0.05;
         break;
-      // case "ArrowDown":
-      case "j":
+      case "ArrowDown":
+        // case "j":
         verticalMovement -= 0.05;
         break;
       // TODO: clear redundancy of key "c"!
