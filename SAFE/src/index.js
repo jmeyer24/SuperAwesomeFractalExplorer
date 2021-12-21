@@ -24,6 +24,7 @@ import { SpriteVert } from "./other/sprite.vert";
 import { SpriteFrag } from "./other/sprite.frag";
 
 let camera, controls;
+let gui, guiMandelbrot, guiJuliaSet;
 let scene, renderer, canvas, context;
 let geometry, material, mesh;
 let uniforms;
@@ -152,8 +153,14 @@ function init() {
    * setup GUI
    */
 
-  const gui = new GUI({ width: 200 });
+  gui = new GUI({ width: 200 });
   gui.close();
+  guiMandelbrot = gui.addFolder("Mandelbrot");
+  guiMandelbrot.close();
+  guiJuliaSet = gui.addFolder("Julia Set");
+  guiJuliaSet.close();
+
+  // mandelbrot parameters
   let parameters = {
     a: 1.0,
     b: 0.0,
@@ -163,7 +170,7 @@ function init() {
     f: 0.0,
   };
   for (let key in parameters) {
-    gui.add(parameters, key, -5.0, 5.0).onChange(function () {
+    guiMandelbrot.add(parameters, key, -5.0, 5.0).onChange(function () {
       uniforms.parameterSet1.value = new THREE.Vector3(
         parameters.a,
         parameters.b,
@@ -175,6 +182,22 @@ function init() {
         parameters.f
       );
     });
+  }
+
+  // juliaset parameters
+  let parametersJulia = {
+    real: -0.8,
+    imaginary: 0.156,
+  };
+  for (let key in parametersJulia) {
+    guiJuliaSet
+      .add(parametersJulia, key, -1.0, 1.0, 0.01)
+      .onChange(function () {
+        uniforms.parametersJulia.value = new THREE.Vector2(
+          parametersJulia.real,
+          parametersJulia.imaginary
+        );
+      });
   }
 
   /*
@@ -219,6 +242,11 @@ function init() {
       type: "vec3",
       value: new THREE.Vector3(parameters.d, parameters.e, parameters.f),
     },
+    parametersJulia: {
+      type: "vec2",
+      value: new THREE.Vector2(parametersJulia.real, parametersJulia.imaginary),
+    },
+    // startC: { type: "vec2", value: new THREE.Vector2(-0.835, -0.2321) }, // -0.8, 0.156) },
     iterations: { type: "int", value: iterations },
     // type "c" for color
     // https://stackoverflow.com/questions/32660646/three-js-define-uniforms-for-fragment-shader
@@ -226,7 +254,6 @@ function init() {
     colorIntensity: { type: "float", value: colorIntensity },
     colorScale: { type: "float", value: colorScale },
     trapR: { type: "float", value: 1e20 },
-    startC: { type: "vec2", value: new THREE.Vector2(-0.835, -0.2321) }, // -0.8, 0.156) },
     time: { type: "double", value: Date.now() },
   };
 
@@ -303,6 +330,12 @@ function onKeydown(event) {
       case "i":
         id_bt_save.click();
         break;
+      case "c":
+        if (gui.closed) {
+          gui.open();
+        } else {
+          gui.close();
+        }
     }
   } else {
     // when we are in explorer mode
@@ -330,6 +363,13 @@ function onKeydown(event) {
       case "j":
         verticalMovement -= 0.05;
         break;
+      // TODO: clear redundancy of key "c"!
+      case "c":
+        if (gui.closed) {
+          gui.open();
+        } else {
+          gui.close();
+        }
     }
     offset.add(new THREE.Vector2(horizontalMovement, verticalMovement));
   }
@@ -384,6 +424,7 @@ function onFractalSelect(key = "") {
         // wireframe: true,
       });
       // controls.enableRotation = false;
+      gui.close();
       break;
 
     case "mandelbrotIterationChange":
@@ -392,6 +433,9 @@ function onFractalSelect(key = "") {
         fragmentShader: MandelbrotIterationChangeFrag,
         side: THREE.DoubleSide,
       });
+      gui.open();
+      guiMandelbrot.open();
+      guiJuliaSet.close();
       break;
 
     case "kochsnowflake":
@@ -402,6 +446,7 @@ function onFractalSelect(key = "") {
         fragmentShader: KochsnowflakeFrag,
         side: THREE.DoubleSide,
       });
+      gui.close();
       break;
 
     case "juliaset":
@@ -410,6 +455,9 @@ function onFractalSelect(key = "") {
         fragmentShader: JuliaSetFrag,
         side: THREE.DoubleSide,
       });
+      gui.open();
+      guiMandelbrot.close();
+      guiJuliaSet.open();
       break;
 
     case "mandelbulb":
@@ -418,6 +466,7 @@ function onFractalSelect(key = "") {
         fragmentShader: MandelbulbFrag,
         side: THREE.DoubleSide,
       });
+      gui.close();
       break;
 
     default:

@@ -12,7 +12,7 @@ uniform vec3 color;
 uniform int iterations;
 uniform float colorScale;
 uniform float trapR;
-uniform vec2 startC;
+uniform vec2 parametersJulia;
 
 vec3 hsv2rgb(float hue, float saturation, float brightness) {
   int H = int(floor(hue/60.0));
@@ -41,7 +41,7 @@ float juliaset(vec2 uv) {
 	float alpha = 0.0;
 	float R = trapR;
 
-	vec2 C = startC; // vec2(-0.8,0.156); is beautiful
+	vec2 C = parametersJulia; // vec2(-0.8,0.156); is beautiful
 
 	for (int i = 0; i < iterations; i++) {
 		// z_n+1 = z^2 + c
