@@ -72,7 +72,7 @@ void main() {
 	vec3 brightness = vec3(0);
 	brightness += kochsnowflake(uv);
 
-    gl_FragColor = vec4(brightness * color,1.0);
+    gl_FragColor = vec4(brightness * color, 1.0);
 }
 
 `;

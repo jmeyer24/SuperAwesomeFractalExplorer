@@ -10,18 +10,21 @@ import { MandelbrotIterationChangeFrag } from "./fractalShaders/mandelbrotIterat
 import { KochsnowflakeFrag } from "./fractalShaders/kochsnowflake.frag";
 import { JuliaSetFrag } from "./fractalShaders/juliaset.frag";
 import { MandelbulbFrag } from "./fractalShaders/mandelbulb.frag";
+import { IsoFrag } from "./fractalShaders/isoShader.frag";
+
+// other
+import { VaryingVert } from "./other/varying.vert";
+import { SpriteVert } from "./other/sprite.vert";
+import { SpriteFrag } from "./other/sprite.frag";
+
 const shaders = [
   "mandelbrot",
   "mandelbrotIterationChange",
   "kochsnowflake",
   "juliaset",
   "mandelbulb",
+  "iso",
 ];
-
-// other
-import { VaryingVert } from "./other/varying.vert";
-import { SpriteVert } from "./other/sprite.vert";
-import { SpriteFrag } from "./other/sprite.frag";
 
 let camera, controls;
 let gui, guiMandelbrot, guiJuliaSet;
@@ -45,8 +48,8 @@ const MAX_ZOOM = Number.MAX_VALUE;
 
 let inSettingMode = false;
 let previousFractal = "";
-const initialFractal = "kochsnowflake"; // "mandelbrot"; // "mandelbulb"; // "juliaset"; // "kochsnowflake"; // "mandelbrot";
-const iterations = 200;
+const initialFractal = "mandelbulb"; // "kochsnowflake"; // "mandelbrot"; // "mandelbulb"; // "juliaset"; // "kochsnowflake"; // "mandelbrot";
+const iterations = 30; // TODO: change back to 200
 const maxKochsnowflakeIterations = 20;
 // let fractalColor = "#2070DF"; // blue
 // let fractalColor = "#1E0064"; // initial violet
@@ -66,7 +69,7 @@ let id_body = document.getElementById("body");
 // html elements with event listeners =========================================
 
 let id_iterations = document.getElementById("iterations");
-id_iterations.value = iterations / 2.0;
+id_iterations.value = iterations / 4.0;
 id_iterations.addEventListener("input", onIterations);
 
 let id_fractalSelector = document.getElementById("fractalSelector");
@@ -122,7 +125,8 @@ function init() {
   // get and set window dimension for the renderer
   // renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
-  // add dom object(renderer) to the body section of the index.html
+  // add dom object (renderer) to the body section of the index.html
+  // on this the renderer draws
   document.body.appendChild(renderer.domElement);
 
   /*
@@ -148,6 +152,8 @@ function init() {
   // );
   controls = new OrbitControls(camera, renderer.domElement);
   controls.update();
+  // TODO: enable/disable damping effect on controls
+  // controls.enableDamping = true;
 
   /*
    * setup GUI
@@ -465,6 +471,15 @@ function onFractalSelect(key = "") {
       mesh.material = new THREE.ShaderMaterial({
         uniforms: uniforms,
         fragmentShader: MandelbulbFrag,
+        side: THREE.DoubleSide,
+      });
+      gui.close();
+      break;
+
+    case "iso":
+      mesh.material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        fragmentShader: IsoFrag,
         side: THREE.DoubleSide,
       });
       gui.close();

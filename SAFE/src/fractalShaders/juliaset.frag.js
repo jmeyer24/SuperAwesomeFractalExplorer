@@ -30,7 +30,7 @@ vec3 hsv2rgb(float hue, float saturation, float brightness) {
     return vec3(p, brightness, t);
   } else if(H == 4) {
     return vec3(t, p, brightness);
-  } else if(H == 5) { 
+  } else if(H == 5) {
     return vec3(brightness, p, q);
   } else {
     return vec3(brightness, p, q);
@@ -51,6 +51,7 @@ float juliaset(vec2 uv) {
 		R = min(R, dot(uv,uv));
 	}
 
+	// why this?
 	alpha = 1.0+log2(R)/16.;
 	alpha = (-1.*alpha+1.);
 	return alpha;

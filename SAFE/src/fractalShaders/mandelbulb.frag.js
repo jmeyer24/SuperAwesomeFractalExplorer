@@ -15,12 +15,20 @@ uniform vec2 offset;
 // gui parameters
 uniform int iterations;
 uniform vec3 color;
+uniform float trapR;
+
+// TODO
+// see for the respective variables https://de.wikipedia.org/wiki/Mandelbulb
+uniform float mb_n;
+uniform float mb_p;
+uniform float mb_q;
 
 // whether turn on the animation
 // #define phase_shift_on
 
 float pixel_size = 0.0;
 
+// rotates the point p around the y-axis by angle a
 void rotateAroundYAxis(inout vec3 p, float a){
 	float c, s;
 	vec3 q = p;
@@ -30,63 +38,69 @@ void rotateAroundYAxis(inout vec3 p, float a){
 	p.z = -s * q.x + c * q.z;
 }
 
-vec3 mb(vec3 p) {
-	p.xyz = p.xzy;
-	vec3 z = p;
-	vec3 dz=vec3(0.0);
-	float power = 8.0;
-	float r, theta, phi;
-	float dr = 1.0;
+// formula from https://de.wikipedia.org/wiki/Mandelbulb
+vec3 mb(vec3 c) {
+	// changes the coordinate system, not much to it I think?!
+	// of course it changes the resulting fractal
+	c.xyz = c.xzy;
+
+	// vector to compute restictedness for
+	vec3 v = c;
+
+	// why 8? seems to be standard for rendering, can be changed
+	float power = 8.0; // == mandelbulb_power
+
+	float r, phi, theta;
+	float cumulativeR = 1.0;
+	float R = trapR;
+
+	for(int i = 0; i < iterations; ++i) { // iterations; ++i) {
+		r = length(v);
+
+		phi = atan(v.y / v.x);
+		theta = acos(v.z / r);
 	
-	float t0 = 1.0;
-	for(int i = 0; i < 7; ++i) {
-		r = length(z);
-		if(r > 2.0) continue;
-		theta = atan(z.y / z.x);
-		#ifdef phase_shift_on
-		phi = asin(z.z / r);
-		#else
-		phi = asin(z.z / r);
-		#endif
-		
-		dr = pow(r, power - 1.0) * dr * power + 1.0;
+		// check whether orbit is ok (same as for mandelbrot)
+		// if distance is bigger than 2.0, don't compute on
+		if(r > 2.0) break;
 	
+		// what the hell is cumulativeR (dr previously)?
+		cumulativeR = pow(r, power - 1.0) * cumulativeR * power + 1.0;
+
+		// compute next step variables
 		r = pow(r, power);
-		theta = theta * power;
 		phi = phi * power;
+		theta = theta * power;
 		
-		z = r * vec3(cos(theta)*cos(phi), sin(theta)*cos(phi), sin(phi)) + p;
+		v = r * vec3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta)) + c;
 		
-		t0 = min(t0, r);
+		R = min(R, r);
 	}
-	return vec3(0.5 * log(r) * r / dr, t0, 0.0);
+
+	// why this?
+	return vec3(0.5 * log(r) * r / cumulativeR, R, 0.0);
+	// return v;
 }
 
- vec3 f(vec3 p){
-	 rotateAroundYAxis(p, 0.2);
-	 return mb(p);
- }
-
-
- float softshadow(vec3 rotation, vec3 rd, float k ){
-	 float akuma=1.0,h=0.0;
-	 float t = 0.01;
-	 for(int i=0; i < 50; ++i){
-		 h=f(rotation+rd*t).x;
-		 if(h<0.001)return 0.02;
-		 akuma=min(akuma, k*h/t);
- 		 t+=clamp(h,0.01,2.0);
-	 }
-	 return akuma;
- }
+float softshadow(vec3 rotation, vec3 rd, float k ){
+	float akuma=1.0,h=0.0;
+	float t = 0.01;
+	for(int i=0; i < 50; ++i){
+		h = mb(rotation+rd*t).x;
+		if(h<0.001)return 0.02;
+		akuma=min(akuma, k*h/t);
+		t+=clamp(h,0.01,2.0);
+	}
+	return akuma;
+}
 
 vec3 nor( in vec3 pos )
 {
 	vec3 eps = vec3(0.001,0.0,0.0);
 	return normalize( vec3(
-		f(pos+eps.xyy).x - f(pos-eps.xyy).x,
-		f(pos+eps.yxy).x - f(pos-eps.yxy).x,
-		f(pos+eps.yyx).x - f(pos-eps.yyx).x ) );
+		mb(pos+eps.xyy).x - mb(pos-eps.xyy).x,
+		mb(pos+eps.yxy).x - mb(pos-eps.yxy).x,
+		mb(pos+eps.yyx).x - mb(pos-eps.yyx).x ) );
 }
 
 vec3 intersect( in vec3 rotation, in vec3 rd )
@@ -109,7 +123,7 @@ vec3 intersect( in vec3 rotation, in vec3 rd )
 		}
 		else{  // avoid broken shader on windows
 	
-			c = f(rotation + rd*t);
+			c = mb(rotation + rd*t);
 			d = c.x;
 
 			if(d > os)
