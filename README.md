@@ -13,33 +13,29 @@ Here we can list the TODOs for future implementation goals
 
 ### Main
 
-* controls on shader (mainly mouse, arrows as second option)
-* enableDamping for orbit controls
-
+* controls on shader (mainly mouse, arrows as second option) -> 2D todo, 3D check
 * controls
 	+ move around: arrow keys [improve or delete] or ~~mouse drag~~ - note: zoom dependenance
 	+ scroll wheel to zoom in/out
 	+ ~~no zoom when cursor is inside settings menu~~
-	+ limit zoom in (before pixel level) and zoom out (default zoom)
-* auto-zoom function
+	+ !! limit zoom in (before pixel level) and zoom out (default zoom)
+* auto-zoom function (button in settings maybe?)
 * auto-rotate function
-
-* screenshot tool
-	+ implement save and (re)load buttons
-	+ optional: save zoom and position of camera
-	+ optional: load by previously saved image the respective zoom position again (via name or how?)
-
 * option for color range/scale for multiple colors
+
 * colors:
-	+ one color tone possible
-	+ change specific colors
+	+ change specific colors, colorpalette
+
+* resizing
+	+ window resizing with good layout(!)
+	+ make settings menu responsive (resizing)
 
 ### Optional
 
-* take a look at XAOS Fractal Zoomer?!
 * save (time dependend) self-controlled video
-* window resizing with good layout(!)
-* make settings menu responsive (resizing)
+* screenshot tool
+	+ optional: save zoom and position of camera
+	+ optional: load by previously saved image the respective zoom position again (via name or how?)
 
 ## Done
 
@@ -52,8 +48,34 @@ Here we can list the TODOs for future implementation goals
 * ~~mandelbrot is scewed, head is scewed~~
 * interactive color palette for individual design
 * change number of iterations of fractal process
+* enableDamping for orbit controls
+* screenshot tool
+	+ implement save and (re)load buttons
+* colors:
+	+ one color tone possible
 
 ## Questions
+
+### Präsentation
+
+* Shader Erklären? -> Details Erklären -> Code zeigen
+* Fractale erklären?
+* (Anzahl Fractale reichen?)
+
+* Was wir glauben zu wissen:
+	+ Wie lange die Präsentation -> 15 Minuten
+	+ Live-Demo
+	+ Bilder machen!
+
+### Report
+
+* Wie lange soll der sein?
+* Wie viel Theorie soll da rein? -> Fractale/Shader
+* (Methodenteil (THREE.js, GLSL, Webbrowser) aufzählen?)
+* Bilder in Report Anhang?
+* Extra Parameter für Mandelbrot (a-g bei Controls) -> Formeln für schwierigere Fraktale
+
+### Other
 
 * iteration-max specified or "your fractal is loading..."
 	+ Answer: specify max which lies over real-time usage, color to mark optimum
