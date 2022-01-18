@@ -46,9 +46,10 @@ const MAX_ZOOM = Number.MAX_VALUE;
 
 // starting settings ========================================================
 
+let requestDownload = false;
 let inSettingMode = false;
 let previousFractal = "";
-const initialFractal = "mandelbulb"; // "kochsnowflake"; // "mandelbrot"; // "mandelbulb"; // "juliaset"; // "kochsnowflake"; // "mandelbrot";
+const initialFractal = "kochsnowflake"; // "mandelbrot"; // "mandelbulb"; // "juliaset"; // "kochsnowflake"; // "mandelbrot";
 const iterations = 30; // TODO: change back to 200
 const maxKochsnowflakeIterations = 20;
 // let fractalColor = "#2070DF"; // blue
@@ -63,7 +64,6 @@ let colorScale = 240.0;
 
 let id_outerSettings = document.getElementById("outerSettings");
 let id_bt_load = document.getElementById("bt_load");
-let id_bt_save = document.getElementById("bt_save");
 let id_body = document.getElementById("body");
 
 // html elements with event listeners =========================================
@@ -100,6 +100,9 @@ id_changeColorScaleOnScroll.addEventListener(
   "change",
   onScrollChangeColorScale
 );
+
+let id_bt_save = document.getElementById("bt_save");
+id_bt_save.addEventListener("click", onDownload);
 
 // other event listeners ======================================================
 
@@ -285,6 +288,11 @@ function render() {
   // scene.overrideMaterial = mesh.material;
 
   renderer.render(scene, camera);
+
+  if (requestDownload) {
+    download();
+    requestDownload = false;
+  }
 }
 
 // Event functions ================================================
@@ -331,7 +339,7 @@ function onKeydown(event) {
         id_changeColorScaleOnScroll.click();
         break;
       case "u":
-        id_bt_load.click();
+        // id_bt_load.click();
         break;
       case "i":
         id_bt_save.click();
@@ -516,7 +524,51 @@ function onColorIntensity() {
 
 // Download ================================================================
 
-// TODO: enable current view download as picture
+// TODO: enable current shader display download as picture
+function onDownload() {
+  requestDownload = true;
+}
+
+function download() {
+  // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob
+  // https://stackoverflow.com/questions/55298242/threejs-scene-with-textures-why-todataurl-return-black-jpg
+
+  canvas.toBlob(function (blob) {
+    // TODO: neither one of these two options produces the shader image for now
+    let url = URL.createObjectURL(blob);
+    // let url = renderer.domElement.toDataURL("image/png");
+
+    // download the current canvas/renderer display
+    let downloadLink = document.createElement("a");
+    downloadLink.href = url;
+    downloadLink.download = "fractalExplorer.jpg";
+    downloadLink.click();
+
+    URL.revokeObjectURL(url);
+  });
+}
+
+// Function to download data to a file
+// https://stackoverflow.com/questions/13405129/javascript-create-and-save-file
+// function download(data, filename, type) {
+//   var file = new Blob([data], { type: type });
+//   if (window.navigator.msSaveOrOpenBlob)
+//     // IE10+
+//     window.navigator.msSaveOrOpenBlob(file, filename);
+//   else {
+//     // Others
+//     var a = document.createElement("a"),
+//       url = URL.createObjectURL(file);
+//     a.href = url;
+//     a.download = filename;
+//     document.body.appendChild(a);
+//     a.click();
+//     setTimeout(function () {
+//       document.body.removeChild(a);
+//       window.URL.revokeObjectURL(url);
+//     }, 0);
+//   }
+// }
 
 // Initialization ==========================================================
 
