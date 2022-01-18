@@ -38,11 +38,10 @@
 					<h2>Misc</h2>
 					<div class="separator"></div>
 
-                    <!--input type="submit" value="Reset/Load"-->
-					<label for="bt_load">Reload the fractal (u)</label><br>
-					<button type="button" id="bt_load">Reset/Load</button><br><br>
-					<label for="bt_save">Save current image (i)</label><br>
-					<button type="button" id="bt_save">Save</button><br><br>
+					<label for="bt_load">Reset changes (u)</label><br>
+					<input type="submit" class="button" id="bt_load" onclick="return confirm('Warning! Reset all changes?')" value="Reset"/><br><br>
+					<label for="bt_download">Download image (i)</label><br>
+					<input type="button" class="button" id="bt_download" value="Save"/><br><br>
                 </form>
 
                 <div>

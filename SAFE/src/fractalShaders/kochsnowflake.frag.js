@@ -66,7 +66,7 @@ float kochsnowflake(vec2 uv) {
 
 void main() {
 	// get the uv coordinates
-	vec2 uv = zoom * 0.3 * (2.0*gl_FragCoord.xy-res.xy)/res.y + offset;
+	vec2 uv = zoom * 0.3 * (2.0*gl_FragCoord.xy-res.xy)/res.y + offset; // cameraPosition.xy; // TODO: weird stuff...
 
 	// compute the current alpha value
 	vec3 brightness = vec3(0);

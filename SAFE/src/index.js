@@ -10,6 +10,7 @@ import { MandelbrotIterationChangeFrag } from "./fractalShaders/mandelbrotIterat
 import { KochsnowflakeFrag } from "./fractalShaders/kochsnowflake.frag";
 import { JuliaSetFrag } from "./fractalShaders/juliaset.frag";
 import { MandelbulbFrag } from "./fractalShaders/mandelbulb.frag";
+import { MandelbulbFractallabFrag } from "./fractalShaders/mandelbulb.fractallab.frag";
 import { IsoFrag } from "./fractalShaders/isoShader.frag";
 
 // other
@@ -23,7 +24,8 @@ const shaders = [
   "kochsnowflake",
   "juliaset",
   "mandelbulb",
-  "iso",
+  // "mandelbulbFractallab",
+  // "iso",
 ];
 
 let camera, controls;
@@ -50,7 +52,7 @@ let requestDownload = false;
 let inSettingMode = false;
 let previousFractal = "";
 const initialFractal = "kochsnowflake"; // "mandelbrot"; // "mandelbulb"; // "juliaset"; // "kochsnowflake"; // "mandelbrot";
-const iterations = 30; // TODO: change back to 200
+const iterations = 200;
 const maxKochsnowflakeIterations = 20;
 // let fractalColor = "#2070DF"; // blue
 // let fractalColor = "#1E0064"; // initial violet
@@ -101,8 +103,8 @@ id_changeColorScaleOnScroll.addEventListener(
   onScrollChangeColorScale
 );
 
-let id_bt_save = document.getElementById("bt_save");
-id_bt_save.addEventListener("click", onDownload);
+let id_bt_download = document.getElementById("bt_download");
+id_bt_download.addEventListener("click", onDownload);
 
 // other event listeners ======================================================
 
@@ -126,8 +128,9 @@ function init() {
     precision: "highp",
   });
   // get and set window dimension for the renderer
-  // renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  // renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+
   // add dom object (renderer) to the body section of the index.html
   // on this the renderer draws
   document.body.appendChild(renderer.domElement);
@@ -145,7 +148,8 @@ function init() {
   );
 
   // set the camera position x,y,z in the scene
-  camera.position.set(0, 0, 0.75);
+  // TODO: this setup puts us in front of the mandelbulb at the start
+  camera.position.set(0, 0.5, 2.5);
 
   // add controls to the camera
   // TODO: can we change this, so the offset and the position of the shader is controlled, not the mesh or the scene?
@@ -154,9 +158,16 @@ function init() {
   //   document.getElementsByClassName("webgl")
   // );
   controls = new OrbitControls(camera, renderer.domElement);
-  controls.update();
+  // TODO: use this function to toggle between 2D and 3D?!
+  // controls.enableRotate = false;
+  //TODO: rotate per default?
+  controls.autoRotate = true;
   // TODO: enable/disable damping effect on controls
-  // controls.enableDamping = true;
+  controls.enableDamping = true;
+  // the previous 2 options need controls.update() in animate() call!
+  // controls.update();
+  // doesn't work with keys?!
+  // controls.keyPanSpeed = 100.0;
 
   /*
    * setup GUI
@@ -222,14 +233,20 @@ function init() {
   });
 
   // geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-  geometry = new THREE.PlaneGeometry(1, 1);
+  geometry = new THREE.PlaneGeometry(50, 50);
   // TODO: merge multiple geometries?
   // geometry.mergeBufferGeometries(new THREE.PlaneGeometry(1, 1));
   mesh = new THREE.Mesh(geometry, material);
-  scene.add(mesh);
 
-  const gridHelper = new THREE.GridHelper(50, 50);
-  scene.add(gridHelper);
+  // set image plane in front of the camera
+  scene.add(camera);
+  camera.add(mesh);
+  mesh.position.set(0, 0, -7.5);
+
+  // add axis for visible camera control
+  // TODO: enable grid helper for 3D rotation check
+  // const gridHelper = new THREE.GridHelper(50, 50);
+  // scene.add(gridHelper);
 
   /*
    * setup shader uniforms
@@ -264,6 +281,8 @@ function init() {
     colorScale: { type: "float", value: colorScale },
     trapR: { type: "float", value: 1e20 },
     time: { type: "double", value: Date.now() },
+    // cameraPosition: { type: "vec3", value: camera.position },
+    cameraRotation: { type: "vec3", value: camera.rotation },
   };
 
   /*
@@ -279,6 +298,10 @@ function init() {
 function animate() {
   uniforms.time = Date.now();
   requestAnimationFrame(animate);
+  // TODO: rotate per default?
+  controls.update();
+  // console.log(camera.position);
+  // console.log(camera.rotation);
   render();
 }
 
@@ -302,7 +325,8 @@ function windowResize() {
   aspect = window.innerWidth / window.innerHeight;
   camera.aspect = aspect;
   camera.updateProjectionMatrix();
-  renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  // renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
 }
 
 function onKeydown(event) {
@@ -339,10 +363,12 @@ function onKeydown(event) {
         id_changeColorScaleOnScroll.click();
         break;
       case "u":
-        // id_bt_load.click();
+        // this input is of type "submit", so it reloads the page when confirmed
+        id_bt_load.click();
         break;
       case "i":
-        id_bt_save.click();
+        // this input is of type "button", so it doesn't reload but triggers onDownload()
+        id_bt_download.click();
         break;
       case "c":
         if (gui.closed) {
@@ -361,23 +387,23 @@ function onKeydown(event) {
         id_bt_settings.click();
         event.preventDefault();
         break;
-      case "ArrowLeft":
-        // case "h":
-        event.preventDefault(); // that toggles the controls
-        horizontalMovement -= 0.05;
-        break;
-      case "ArrowUp":
-        // case "k":
-        verticalMovement += 0.05;
-        break;
-      case "ArrowRight":
-        // case "l":
-        horizontalMovement += 0.05;
-        break;
-      case "ArrowDown":
-        // case "j":
-        verticalMovement -= 0.05;
-        break;
+      // case "ArrowLeft":
+      //   // case "h":
+      //   event.preventDefault(); // that toggles the controls
+      //   horizontalMovement -= 0.05;
+      //   break;
+      // case "ArrowUp":
+      //   // case "k":
+      //   verticalMovement += 0.05;
+      //   break;
+      // case "ArrowRight":
+      //   // case "l":
+      //   horizontalMovement += 0.05;
+      //   break;
+      // case "ArrowDown":
+      //   // case "j":
+      //   verticalMovement -= 0.05;
+      //   break;
       // TODO: clear redundancy of key "c"!
       case "c":
         if (gui.closed) {
@@ -386,7 +412,9 @@ function onKeydown(event) {
           gui.close();
         }
     }
-    offset.add(new THREE.Vector2(horizontalMovement, verticalMovement));
+    // offset.add(new THREE.Vector2(horizontalMovement, verticalMovement));
+    // TODO: this is important, so that mandelbulb does behave correctly!!!
+    offset = controls.position;
   }
 }
 
@@ -399,13 +427,14 @@ function onChangeFromToKoch(curFrac, preFrac) {
   let exponent = 0.0;
   let max = iterations;
   let min = 1.0;
-  if (preFrac == "kochsnowflake") {
+  // TODO: less iterations for mandelbulb as well?
+  if (preFrac == "kochsnowflake" || preFrac == "mandelbulb") {
     exponent = 1.0;
     if (id_iterations.value == 0.0) {
       id_iterations.value = 1.0;
     }
     id_iterations.max = max;
-  } else if (curFrac == "kochsnowflake") {
+  } else if (curFrac == "kochsnowflake" || curFrac == "mandelbulb") {
     exponent = -1.0;
     max = maxKochsnowflakeIterations;
     min = 0.0;
@@ -433,12 +462,8 @@ function onFractalSelect(key = "") {
         uniforms: uniforms,
         fragmentShader: MandelbrotFrag,
         side: THREE.DoubleSide,
-        // TODO: get the plane to behave like a sprite
-        // vertexShader: SpriteVert,
-        // fragmentShader: SpriteFrag,
-        // wireframe: true,
       });
-      // controls.enableRotation = false;
+      // controls.enableRotate = false;
       gui.close();
       break;
 
@@ -479,6 +504,15 @@ function onFractalSelect(key = "") {
       mesh.material = new THREE.ShaderMaterial({
         uniforms: uniforms,
         fragmentShader: MandelbulbFrag,
+        side: THREE.DoubleSide,
+      });
+      gui.close();
+      break;
+
+    case "mandelbulbFractallab":
+      mesh.material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        fragmentShader: MandelbulbFractallabFrag,
         side: THREE.DoubleSide,
       });
       gui.close();
@@ -526,7 +560,10 @@ function onColorIntensity() {
 
 // TODO: enable current shader display download as picture
 function onDownload() {
-  requestDownload = true;
+  let answer = confirm("Download the current image?");
+  if (answer) {
+    requestDownload = true;
+  }
 }
 
 function download() {

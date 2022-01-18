@@ -71,7 +71,8 @@ h2 {
   margin-top: 20px;
 }
 
-button {
+/* button, */
+input.button {
   border-radius: 0%;
   border: none;
   cursor: pointer;

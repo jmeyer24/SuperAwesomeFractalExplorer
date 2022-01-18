@@ -23,6 +23,9 @@ uniform float mb_n;
 uniform float mb_p;
 uniform float mb_q;
 
+// uniform vec3 cameraPosition;
+uniform vec3 cameraRotation;
+
 // whether turn on the animation
 // #define phase_shift_on
 
@@ -163,10 +166,11 @@ vec4 mandelbulb( vec2 uv )
 
 	pixel_size = 1.0/(iRes.x * 3.0);
 	// camera
-	float sinusRotation = 0.7+0.3*sin(0.4);
-	float cosinusRotation = 0.7+0.3*cos(0.4);
+	// float sinusRotation = 0.7+0.3*sin(0.4);
+	// float cosinusRotation = 0.7+0.3*cos(0.4);
 
-	vec3 rotation = vec3(0.0, 3.*sinusRotation*cosinusRotation, 3.*(1.-sinusRotation*cosinusRotation));
+	// vec3 rotation = vec3(0.0, 3.*sinusRotation*cosinusRotation, 3.*(1.-sinusRotation*cosinusRotation));
+	vec3 rotation = cameraPosition; // ... cameraRotation; // TODO: why is it called rotation if it's about the position of the camera???
 
 	vec3 cf = normalize(-rotation);
 	vec3 cs = normalize(cross(cf,vec3(0.0,1.0,0.0)));
@@ -218,7 +222,7 @@ vec4 mandelbulb( vec2 uv )
 
 void main() {
 	// get the 3D-uv coordinates
-	vec2 uv = zoom * (2.0*gl_FragCoord.xy-res.xy)/res.y + offset;
+	vec2 uv = zoom * (2.0*gl_FragCoord.xy-res.xy)/res.y + offset; // TODO: this offset needs to be controls.position!!!
 
 	// compute the current alpha value
 	vec4 brightness = vec4(0);
