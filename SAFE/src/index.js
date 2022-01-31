@@ -61,6 +61,7 @@ let fractalColor = "#CC3333"; // red
 let colorIntensity = 10.0;
 let changeColorScaleOnScroll = false;
 let colorScale = 240.0;
+let mouseDown = false;
 
 // html elements ==============================================================
 
@@ -110,6 +111,10 @@ id_bt_download.addEventListener("click", onDownload);
 
 window.addEventListener("resize", windowResize, true);
 document.addEventListener("keydown", onKeydown);
+document.addEventListener("mousedown", onMouseDown);
+document.addEventListener("mouseup", onMouseUp);
+document.addEventListener("mousemove", onMouseMove);
+document.addEventListener("wheel", onScroll);
 
 // initialization ============================================================
 
@@ -554,6 +559,30 @@ function onColorSelect() {
 function onColorIntensity() {
   colorIntensity = id_colorIntensity.value;
   uniforms.colorIntensity.value = colorIntensity;
+}
+
+function onMouseDown() {
+  mouseDown = true;
+}
+
+function onMouseUp() {
+  mouseDown = false
+}
+
+function onMouseMove() {
+  if (mouseDown) {
+    
+  }
+}
+
+function onScroll(event) {
+  if (id_fractalSelector.value == "mandelbulb") return;
+  if ("wheelDeltaY" in event) {
+    zoom *= 1 - event.wheelDeltaY * 0.0003;
+  } else {
+    zoom *= 1 + event.wheelDeltaY * 0.01;
+  }
+  uniforms['zoom']['value'] = zoom;
 }
 
 // Download ================================================================
