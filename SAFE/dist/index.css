@@ -32,10 +32,15 @@ body {
   z-index: 2;
   height: 40px;
   width: 40px;
+  cursor: pointer;
+}
+
+#bt_settings:hover {
+  border-color: rgb(156, 156, 156);
 }
 
 #outerSettings {
-  background-color: #41414190;
+  background-color: #41414195;
   color: #fff;
   width: 400px;
   height: 100vh;
@@ -47,11 +52,11 @@ body {
 }
 
 #innerSettings {
-  height: 100%;
   padding: 2em;
   padding-left: 50px;
   padding-top: 45px;
   overflow-y: scroll;
+  height: calc(100% - 4em);
 }
 
 .separator {
@@ -85,6 +90,16 @@ input.button:hover {
   background-color: #6d6d6d;
 }
 
+input[type="color"] {
+  margin: 0px 0px 0px 50px;
+	width: 30px;
+	height: 30px;
+	border: none;
+	border-radius: 40px;
+	background: none;
+  border-radius: 50%;
+}
+
 #fractalSelector,
 #colorSelector,
 .slider {
@@ -104,7 +119,7 @@ input.button:hover {
 #fractalSelector {
   background-color: #414141;
   color: #fff;
-  border: 1px solid #fff;
+  border: none;
   border-radius: 3px;
   padding: 7px 5px;
 }
@@ -130,13 +145,25 @@ input.button:hover {
   flex-direction: column;
 }
 
+.settings-option-horizontal {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  margin-bottom: 20px;
+}
+
 .checkbox-option {
   display: flex;
   align-items: flex-start;
+  margin-bottom: 20px;
 }
 
-.checkbox-option input {
+.checkbox-option input[type="checkbox"] {
   margin: 2px 0px 0px 25px;
+}
+
+.checkbox-option input[type="color"] {
+  margin: -6px 0px 0px 25px;
 }
 
 label {
@@ -163,11 +190,4 @@ label {
   font-family: 'Courier New', Courier, monospace;
   font-size: 11px;
   color: #fff;
-}
-
-.settings-option-horizontal {
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-  margin-bottom: 20px;
 }
