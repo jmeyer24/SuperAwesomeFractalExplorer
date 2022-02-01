@@ -567,8 +567,10 @@ function onColorIntensity() {
   uniforms.colorIntensity.value = colorIntensity;
 }
 
-function onMouseDown() {
+function onMouseDown(event) {
   mouseDown = true;
+  mouseOrigin.x = event.clientX /window.innerWidth;
+  mouseOrigin.y = 1 - event.clientY / window.innerHeight;
 }
 
 function onMouseUp() {
@@ -577,7 +579,9 @@ function onMouseUp() {
 
 function onMouseMove() {
   if (mouseDown) {
-    
+    let mouseX = mouseOrigin.x - (event.clientX / window.innerWidth);
+		let mouseY = mouseOrigin.y - (1 - event.clientY / window.innerHeight);
+		offset = offset.add(new THREE.Vector2(mouseX * 0.05 * zoom * aspect, mouseY * 0.05 * zoom));
   }
 }
 
@@ -589,12 +593,12 @@ function onScroll(event) {
   } else {
     zoom *= 1 + event.wheelDeltaY * 0.01;
   }
-  if (zoom > 3) {
+  if (zoom > MIN_ZOOM) {
     showNotificationWidnow("You reached the minimal zoom");
     zoom = 2.9;
-  } else if (zoom < 0.5) {
+  } else if (zoom < 0.005) {
     showNotificationWidnow("You reached the maximal zoom");
-    zoom = 0.6;
+    zoom = 0.005;
   } else {
     uniforms['zoom']['value'] = zoom;
   }
