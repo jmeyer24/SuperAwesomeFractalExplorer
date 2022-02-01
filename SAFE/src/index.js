@@ -41,6 +41,8 @@ let zoom = 1.8;
 // TODO: apply zoom updating for resolution resetting on-the-fly
 const MIN_ZOOM = 3.0;
 const MAX_ZOOM = Number.MAX_VALUE;
+let mouseDown = false;
+let mouseOrigin = {x: 0.0, y: 0.0};
 // TODO: initialize resolution 3d for 3D fractals like mandelbulb
 // https://stackoverflow.com/questions/48384564/webgl-glsl-time-variable-similar-to-shadertoy
 // const timeLocation = context.getUniformLocation(program, "time");
@@ -61,7 +63,6 @@ let fractalColor = "#CC3333"; // red
 let colorIntensity = 10.0;
 let changeColorScaleOnScroll = false;
 let colorScale = 240.0;
-let mouseDown = false;
 
 // html elements ==============================================================
 
@@ -106,6 +107,11 @@ id_changeColorScaleOnScroll.addEventListener(
 
 let id_bt_download = document.getElementById("bt_download");
 id_bt_download.addEventListener("click", onDownload);
+
+let id_notificationWindow = document.getElementById("notification-window");
+let id_notification = document.getElementById("notification");
+let id_btnCloseNotification = document.getElementById("btn_closeNotification");
+id_btnCloseNotification.addEventListener("click", onCloseNotifcationWindow);
 
 // other event listeners ======================================================
 
@@ -577,12 +583,33 @@ function onMouseMove() {
 
 function onScroll(event) {
   if (id_fractalSelector.value == "mandelbulb") return;
+  let tempZoom = zoom;
   if ("wheelDeltaY" in event) {
     zoom *= 1 - event.wheelDeltaY * 0.0003;
   } else {
     zoom *= 1 + event.wheelDeltaY * 0.01;
   }
-  uniforms['zoom']['value'] = zoom;
+  if (zoom > 3) {
+    showNotificationWidnow("You reached the minimal zoom");
+    zoom = 2.9;
+  } else if (zoom < 0.5) {
+    showNotificationWidnow("You reached the maximal zoom");
+    zoom = 0.6;
+  } else {
+    uniforms['zoom']['value'] = zoom;
+  }
+}
+
+function showNotificationWidnow(msg) {
+  id_notificationWindow.style.display = "block";
+  id_notification.innerHTML = msg;
+  setTimeout(function() {
+    onCloseNotifcationWindow();
+  }, 3000);
+}
+
+function onCloseNotifcationWindow() {
+  id_notificationWindow.style.display = "none"; 
 }
 
 // Download ================================================================
