@@ -40,7 +40,8 @@ let offset = new THREE.Vector2();
 let zoom = 1.8;
 // TODO: apply zoom updating for resolution resetting on-the-fly
 const MIN_ZOOM = 3.0;
-const MAX_ZOOM = Number.MAX_VALUE;
+// const MAX_ZOOM = Number.MAX_VALUE;
+const MAX_ZOOM = 0.000005;
 let mouseDown = false;
 let mouseOrigin = {x: 0.0, y: 0.0};
 // TODO: initialize resolution 3d for 3D fractals like mandelbulb
@@ -588,8 +589,8 @@ function onMouseMove(event) {
   if (mouseDown) {
     let mouseX = mouseOrigin.x - (event.clientX / window.innerWidth);
 		let mouseY = mouseOrigin.y - (1 - event.clientY / window.innerHeight);
-    console.log("mouseX = " + mouseX);
-    console.log("mouseY = " + mouseY);
+    // console.log("mouseX = " + mouseX);
+    // console.log("mouseY = " + mouseY);
 		offset = offset.add(new THREE.Vector2(mouseX * 0.03 * zoom * aspect, mouseY * 0.03 * zoom));
   }
 }
@@ -605,10 +606,11 @@ function onScroll(event) {
   if (zoom > MIN_ZOOM) {
     showNotificationWidnow("You reached the minimal zoom");
     zoom = 2.9;
-  } else if (zoom < 0.005) {
+  } else if (zoom < MAX_ZOOM) {
     showNotificationWidnow("You reached the maximal zoom");
-    zoom = 0.005;
+    zoom = MAX_ZOOM;
   } else {
+    console.log(zoom);
     uniforms['zoom']['value'] = zoom;
   }
 }
@@ -646,10 +648,6 @@ function onCloseNotifcationWindow() {
     id_notificationWindow.style.opacity = op;
     op -= 0.1;
   }, 50);
-}
-
-function fadeIn() {
-  
 }
 
 // Download ================================================================
