@@ -116,11 +116,6 @@ id_btnCloseNotification.addEventListener("click", onCloseNotifcationWindow);
 // other event listeners ======================================================
 
 window.addEventListener("resize", windowResize, true);
-document.addEventListener("keydown", onKeydown);
-document.addEventListener("mousedown", onMouseDown);
-document.addEventListener("mouseup", onMouseUp);
-document.addEventListener("mousemove", onMouseMove);
-document.addEventListener("wheel", onScroll);
 
 // initialization ============================================================
 
@@ -179,6 +174,15 @@ function init() {
   // controls.update();
   // doesn't work with keys?!
   // controls.keyPanSpeed = 100.0;
+
+  // add mouse control event listeners for 2D mode after initialisation of canvas
+  // to trigger 2d controls only when mouse is inside canvas
+  canvas.addEventListener("keydown", onKeydown);
+  canvas.addEventListener("mousedown", onMouseDown);
+  canvas.addEventListener("mouseup", onMouseUp);
+  canvas.addEventListener("mousemove", onMouseMove);
+  canvas.addEventListener("wheel", onScroll);
+
 
   /*
    * setup GUI
@@ -545,7 +549,9 @@ function onFractalSelect(key = "") {
         id_fractalSelector.selectedIndex = 0;
       }
       onFractalSelect();
+      
   }
+  resetZoom();
 }
 
 function onClickSettingsMenu() {
@@ -568,6 +574,7 @@ function onColorIntensity() {
 }
 
 function onMouseDown(event) {
+  if (id_fractalSelector.value == "mandelbulb") return;
   mouseDown = true;
   mouseOrigin.x = event.clientX /window.innerWidth;
   mouseOrigin.y = 1 - event.clientY / window.innerHeight;
@@ -577,11 +584,13 @@ function onMouseUp() {
   mouseDown = false
 }
 
-function onMouseMove() {
+function onMouseMove(event) {
   if (mouseDown) {
     let mouseX = mouseOrigin.x - (event.clientX / window.innerWidth);
 		let mouseY = mouseOrigin.y - (1 - event.clientY / window.innerHeight);
-		offset = offset.add(new THREE.Vector2(mouseX * 0.05 * zoom * aspect, mouseY * 0.05 * zoom));
+    console.log("mouseX = " + mouseX);
+    console.log("mouseY = " + mouseY);
+		offset = offset.add(new THREE.Vector2(mouseX * 0.03 * zoom * aspect, mouseY * 0.03 * zoom));
   }
 }
 
@@ -604,16 +613,43 @@ function onScroll(event) {
   }
 }
 
-function showNotificationWidnow(msg) {
-  id_notificationWindow.style.display = "block";
-  id_notification.innerHTML = msg;
-  setTimeout(function() {
-    onCloseNotifcationWindow();
-  }, 3000);
+function resetZoom() {
+  zoom = MIN_ZOOM;
+  uniforms['zoom']['value'] = zoom;
 }
 
-function onCloseNotifcationWindow() {
-  id_notificationWindow.style.display = "none"; 
+function showNotificationWidnow(msg) {
+  if (id_notificationWindow.style.display == "block") return; // avoid function being called multiple times
+  id_notificationWindow.style.display = "block";
+  id_notification.innerHTML = msg;
+  id_notificationWindow.style.display = "block";
+  let op = 0;
+  let timer = setInterval(function() {
+    if (op >= 1) {
+      clearInterval(timer);
+    }
+    id_notificationWindow.style.opacity = op;
+    op += 0.1;
+  }, 50);
+  setTimeout(function() {
+    onCloseNotifcationWindow();
+  }, 3500);
+}
+
+function onCloseNotifcationWindow() {  
+  let op = 1;
+  let timer = setInterval(function() {
+    if (op <= 0.1) {
+      clearInterval(timer);
+      id_notificationWindow.style.display = "none";
+    }
+    id_notificationWindow.style.opacity = op;
+    op -= 0.1;
+  }, 50);
+}
+
+function fadeIn() {
+  
 }
 
 // Download ================================================================
