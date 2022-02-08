@@ -36,6 +36,8 @@ Here we can list the TODOs for future implementation goals
 * screenshot tool
 	+ optional: save zoom and position of camera
 	+ optional: load by previously saved image the respective zoom position again (via name or how?)
+* environmental light (to upload)
+* romansco brokkoli? implementieren und bild gegenüberstellen
 
 ## Done
 
@@ -67,6 +69,14 @@ Here we can list the TODOs for future implementation goals
 	+ Live-Demo
 	+ Bilder machen!
 
+showing pictures/demo -> at start? at the end?
+overall goal
+simple example
+5 min explanation of implementation
+focus on shader (implementation challenges)
+runtime optimization?? -> maybe
+-> send some preemptive slides
+
 ### Report
 
 * Wie lange soll der sein?
@@ -74,6 +84,13 @@ Here we can list the TODOs for future implementation goals
 * (Methodenteil (THREE.js, GLSL, Webbrowser) aufzählen?)
 * Bilder in Report Anhang?
 * Extra Parameter für Mandelbrot (a-g bei Controls) -> Formeln für schwierigere Fraktale
+
+similar to a scientific paper
+-> theory -> some formulas
+-> implementation details (code examples)
+-> shader examples
+-> shader pipeline?! -> slides von scientific visualization
+-> result pictures
 
 ### Other
 
