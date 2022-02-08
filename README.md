@@ -3,8 +3,8 @@ In short: SAFE
 
 ## Version
 
-2021-11-15: Mandelbrot Explorer
-2021-11-26: Small Mandelbrot and Koch Explorer
+2021-11-15: Mandelbrot Explorer  
+2021-11-26: Small Mandelbrot and Koch Explorer  
 2021-12-21: 2D/3D Fractal Displayer
 
 ## TODOs
@@ -60,48 +60,52 @@ Here we can list the TODOs for future implementation goals
 
 ### Präsentation
 
-* Shader Erklären? -> Details Erklären -> Code zeigen
-* Fractale erklären?
-* (Anzahl Fractale reichen?)
+- Shader Erklären?  
+&rarr; Details Erklären?  
+&rarr; Code zeigen?
+- Fractale erklären?
+- Anzahl Fractale reichen?
 
-* Was wir glauben zu wissen:
-	+ Wie lange die Präsentation -> 15 Minuten
-	+ Live-Demo
-	+ Bilder machen!
+**Was wir glauben zu wissen:**  
+- 15 Minuten Präsentation
+- Live-Demo
+- Bilder machen!
 
-showing pictures/demo -> at start? at the end?
-overall goal
-simple example
-5 min explanation of implementation
-focus on shader (implementation challenges)
-runtime optimization?? -> maybe
--> send some preemptive slides
+> - showing pictures/demo  
+> - overall goal  
+> - simple example  
+> - 5 min explanation of implementation  
+>	- focus on shader (implementation challenges)  
+> - maybe runtime optimization
+
+&rarr; send some preemptive slides  
 
 ### Report
 
-* Wie lange soll der sein?
-* Wie viel Theorie soll da rein? -> Fractale/Shader
-* (Methodenteil (THREE.js, GLSL, Webbrowser) aufzählen?)
-* Bilder in Report Anhang?
-* Extra Parameter für Mandelbrot (a-g bei Controls) -> Formeln für schwierigere Fraktale
+- Wie lange soll der sein?
+- Wie viel Theorie soll da rein? -> Fractale/Shader
+- Methodenteil (THREE.js, GLSL, Webbrowser) aufzählen?
+- Bilder in Report Anhang?
+- Extra Parameter für Mandelbrot (a-g bei Controls) -> Formeln für schwierigere Fraktale
 
-similar to a scientific paper
--> theory -> some formulas
--> implementation details (code examples)
--> shader examples
--> shader pipeline?! -> slides von scientific visualization
--> result pictures
+> similar to a scientific paper:  
+> - theory (some formulas)  
+> - implementation details (code examples)  
+> - shader examples  
+> - result pictures
+> - shader pipeline?! (slides von scientific visualization)  
 
 ### Other
 
-* iteration-max specified or "your fractal is loading..."
-	+ Answer: specify max which lies over real-time usage, color to mark optimum
+- iteration-max specified or "your fractal is loading..."
+> Answer:  
+> - specify max which lies over real-time usage  
+> - color to mark optimum
 
 ## Setup
 
-In the file "Setup and Learning/assignment1_SS21.pdf" there is an explanation of the setup for using "npm" and the localhost (e.g. the environment setup)
-
-In the respective folders with the name "Setup..." you can find different setups of Three.js usages
+In the file "Setup and Learning/assignment1_SS21.pdf" there is an explanation of the setup for using "npm" and the localhost (e.g. the environment setup)  
+In the respective folders with the name "Setup..." you can find different setups of Three.js usages  
 These were part of the Lecture "Scientific Visualization" from Jun.Prof. Michael Krone in Summersemester 2021, only for learning purposes, no distribution
 
 ## Appendix and Credits

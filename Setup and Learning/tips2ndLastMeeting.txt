@@ -1,0 +1,8 @@
+color indicating iteration maximum over 1500, as this is feasible
+iterations still manually by slider
+
+all controls / specific julia or sth at one side
+
+implement color map
+
+animations would be nice for flair
