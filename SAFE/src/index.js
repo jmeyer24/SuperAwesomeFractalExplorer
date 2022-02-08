@@ -40,7 +40,10 @@ let offset = new THREE.Vector2();
 let zoom = 1.8;
 // TODO: apply zoom updating for resolution resetting on-the-fly
 const MIN_ZOOM = 3.0;
-const MAX_ZOOM = Number.MAX_VALUE;
+// const MAX_ZOOM = Number.MAX_VALUE;
+const MAX_ZOOM = 0.000005;
+let mouseDown = false;
+let mouseOrigin = {x: 0.0, y: 0.0};
 // TODO: initialize resolution 3d for 3D fractals like mandelbulb
 // https://stackoverflow.com/questions/48384564/webgl-glsl-time-variable-similar-to-shadertoy
 // const timeLocation = context.getUniformLocation(program, "time");
@@ -106,10 +109,14 @@ id_changeColorScaleOnScroll.addEventListener(
 let id_bt_download = document.getElementById("bt_download");
 id_bt_download.addEventListener("click", onDownload);
 
+let id_notificationWindow = document.getElementById("notification-window");
+let id_notification = document.getElementById("notification");
+let id_btnCloseNotification = document.getElementById("btn_closeNotification");
+id_btnCloseNotification.addEventListener("click", onCloseNotifcationWindow);
+
 // other event listeners ======================================================
 
 window.addEventListener("resize", windowResize, true);
-document.addEventListener("keydown", onKeydown);
 
 // initialization ============================================================
 
@@ -168,6 +175,15 @@ function init() {
   // controls.update();
   // doesn't work with keys?!
   // controls.keyPanSpeed = 100.0;
+
+  // add mouse control event listeners for 2D mode after initialisation of canvas
+  // to trigger 2d controls only when mouse is inside canvas
+  canvas.addEventListener("keydown", onKeydown);
+  canvas.addEventListener("mousedown", onMouseDown);
+  canvas.addEventListener("mouseup", onMouseUp);
+  canvas.addEventListener("mousemove", onMouseMove);
+  canvas.addEventListener("wheel", onScroll);
+
 
   /*
    * setup GUI
@@ -534,7 +550,9 @@ function onFractalSelect(key = "") {
         id_fractalSelector.selectedIndex = 0;
       }
       onFractalSelect();
+      
   }
+  resetZoom();
 }
 
 function onClickSettingsMenu() {
@@ -554,6 +572,82 @@ function onColorSelect() {
 function onColorIntensity() {
   colorIntensity = id_colorIntensity.value;
   uniforms.colorIntensity.value = colorIntensity;
+}
+
+function onMouseDown(event) {
+  if (id_fractalSelector.value == "mandelbulb") return;
+  mouseDown = true;
+  mouseOrigin.x = event.clientX /window.innerWidth;
+  mouseOrigin.y = 1 - event.clientY / window.innerHeight;
+}
+
+function onMouseUp() {
+  mouseDown = false
+}
+
+function onMouseMove(event) {
+  if (mouseDown) {
+    let mouseX = mouseOrigin.x - (event.clientX / window.innerWidth);
+		let mouseY = mouseOrigin.y - (1 - event.clientY / window.innerHeight);
+    // console.log("mouseX = " + mouseX);
+    // console.log("mouseY = " + mouseY);
+		offset = offset.add(new THREE.Vector2(mouseX * 0.03 * zoom * aspect, mouseY * 0.03 * zoom));
+  }
+}
+
+function onScroll(event) {
+  if (id_fractalSelector.value == "mandelbulb") return;
+  let tempZoom = zoom;
+  if ("wheelDeltaY" in event) {
+    zoom *= 1 - event.wheelDeltaY * 0.0003;
+  } else {
+    zoom *= 1 + event.wheelDeltaY * 0.01;
+  }
+  if (zoom > MIN_ZOOM) {
+    showNotificationWidnow("You reached the minimal zoom");
+    zoom = 2.9;
+  } else if (zoom < MAX_ZOOM) {
+    showNotificationWidnow("You reached the maximal zoom");
+    zoom = MAX_ZOOM;
+  } else {
+    console.log(zoom);
+    uniforms['zoom']['value'] = zoom;
+  }
+}
+
+function resetZoom() {
+  zoom = MIN_ZOOM;
+  uniforms['zoom']['value'] = zoom;
+}
+
+function showNotificationWidnow(msg) {
+  if (id_notificationWindow.style.display == "block") return; // avoid function being called multiple times
+  id_notificationWindow.style.display = "block";
+  id_notification.innerHTML = msg;
+  id_notificationWindow.style.display = "block";
+  let op = 0;
+  let timer = setInterval(function() {
+    if (op >= 1) {
+      clearInterval(timer);
+    }
+    id_notificationWindow.style.opacity = op;
+    op += 0.1;
+  }, 50);
+  setTimeout(function() {
+    onCloseNotifcationWindow();
+  }, 3500);
+}
+
+function onCloseNotifcationWindow() {  
+  let op = 1;
+  let timer = setInterval(function() {
+    if (op <= 0.1) {
+      clearInterval(timer);
+      id_notificationWindow.style.display = "none";
+    }
+    id_notificationWindow.style.opacity = op;
+    op -= 0.1;
+  }, 50);
 }
 
 // Download ================================================================
