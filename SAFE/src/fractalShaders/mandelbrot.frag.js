@@ -15,7 +15,7 @@ uniform vec2 offset;
 uniform vec3 parametersMandelbrot1;
 uniform vec3 parametersMandelbrot2;
 uniform bool parametersFancy;
-uniform float parametersColor;
+uniform vec2 parametersColor;
 uniform int iterations;
 uniform vec3 color;
 uniform float colorIntensity;
@@ -100,7 +100,7 @@ while (i < iterations && complexMagnitude(z) <= 4.0) {
 	i = i + 1;
 }
 
-float colorValue = float(i-1)/float(iterations);
+float colorValue = float(i)/float(iterations);
 // some fancy stuff happening
 if(parametersFancy){
 	if(z_0_mag <= 4.0){
@@ -111,7 +111,7 @@ vec3 col = vec3(0);
 col += 1.0 - colorValue;
 
 if(colorScaleBool){
-	col = hsv2rgb(-colorValue*360.0+parametersColor, 1.0, 1.0-colorValue);
+	col = hsv2rgb(360.0*(-colorValue*parametersColor.y+parametersColor.x), 1.0, 1.0-colorValue);
 } else {
 	col = pow(col, colorIntensity*abs(1.0-color));
 }

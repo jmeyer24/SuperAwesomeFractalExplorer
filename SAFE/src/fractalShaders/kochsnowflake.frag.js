@@ -59,7 +59,7 @@ float kochsnowflake(vec2 uv) {
     }
 
     distance = length(uv - vec2(clamp(uv.x,-1., 1.), 0));
-	alpha = smoothstep(1./res.y, .0, distance/scale);
+	alpha = smoothstep(clamp(10.0*zoom,0.001,5.0)/(res.x), .0, distance/scale);
 
 	return alpha;
 }

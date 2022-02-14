@@ -56,7 +56,7 @@ const MAX_ZOOM = 0.000005;
 let requestDownload = false;
 let inSettingMode = false;
 let previousFractal = "";
-const initialFractal = "Mandelbrot";
+const initialFractal = "Mandelbulb";
 const iterations = 200;
 const maxKochsnowflakeIterations = 20;
 let fractalColor = "#CC3333"; // "#CC3333"; red "#2070DF"; blue "#1E0064" violet "#66cc33" green
@@ -138,8 +138,7 @@ function init() {
   );
 
   // set the camera position x,y,z in the scene
-  // camera.position.set(0, 0.5, 2.5);
-  camera.position.set(0, 1, 0);
+  camera.position.set(0, 2, 0);
 
   // add controls to the camera
   controls = new OrbitControls(camera, renderer.domElement);
@@ -147,15 +146,15 @@ function init() {
   controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
   controls.mouseButtons.MIDDLE = THREE.MOUSE.ROTATE;
 
-  // TODO: use this function to toggle between 2D and 3D?!
-  // controls.enableRotate = false;
-
   // the following 2 options need controls.update() in animate() call!
   // rotate per default
-  controls.autoRotate = false;
+  // controls.autoRotate = true;
   // enable/disable damping effect on controls
   // controls.enableDamping = true;
+
   // controls.enableZoom = false;
+  // TODO: use this function to toggle between 2D and 3D?!
+  controls.enableRotate = false;
 
   /*
    * setup GUI
@@ -213,12 +212,18 @@ function init() {
 
   let parametersColor = {
     colorScale: 0.0,
+    colorDiversity: 1.0,
   };
-  guiMandelbrot
-    .add(parametersColor, "colorScale", 0.0, 360.0, 1.0)
-    .onChange(function () {
-      uniforms.parametersColor.value = parametersColor.colorScale;
-    });
+  for (let key in parametersColor) {
+    guiMandelbrot
+      .add(parametersColor, key, 0.0, 1.0, 0.01)
+      .onChange(function () {
+        uniforms.parametersColor.value = new THREE.Vector2(
+          parametersColor.colorScale,
+          parametersColor.colorDiversity
+        );
+      });
+  }
 
   // juliaset parameters
   let parametersJulia = {
@@ -306,8 +311,11 @@ function init() {
       value: parametersFancy.fancyMandelbrot,
     },
     parametersColor: {
-      type: "float",
-      value: colorScale,
+      type: "vec2",
+      value: new THREE.Vector2(
+        parametersColor.colorScale,
+        parametersColor.colorDiversity
+      ),
     },
     parametersJulia: {
       type: "vec2",
