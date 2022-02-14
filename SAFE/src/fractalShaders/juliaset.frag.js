@@ -5,7 +5,6 @@ precision highp float;
 uniform vec2 res;
 uniform float aspect;
 uniform float zoom;
-uniform vec2 offset;
 
 // gui parameters
 uniform vec3 color;
@@ -58,6 +57,7 @@ float juliaset(vec2 uv) {
 }
 
 void main() {
+	vec2 offset = vec2(cameraPosition.x, -cameraPosition.z);
 	vec2 uv = zoom * (2.0*gl_FragCoord.xy-res.xy)/res.y + offset;
 
 	// compute the current brightness value

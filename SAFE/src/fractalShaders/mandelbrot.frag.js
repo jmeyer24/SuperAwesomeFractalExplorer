@@ -9,7 +9,6 @@ export const MandelbrotFrag = `
 precision highp float;
 uniform vec2 res;
 uniform float zoom;
-uniform vec2 offset;
 
 // gui parameters
 uniform vec3 parametersMandelbrot1;
@@ -122,9 +121,10 @@ return col;
 // main function =============================================================
 
 void main() {
-vec2 uv = zoom * (2.0*gl_FragCoord.xy-res.xy)/res.y + offset;
+	vec2 offset = vec2(cameraPosition.x, -cameraPosition.z);
+	vec2 uv = zoom * (2.0*gl_FragCoord.xy-res.xy)/res.y + offset;
 
-gl_FragColor = vec4(mandelbrot(uv), 1.0);
+	gl_FragColor = vec4(mandelbrot(uv), 1.0);
 }
 
 `;

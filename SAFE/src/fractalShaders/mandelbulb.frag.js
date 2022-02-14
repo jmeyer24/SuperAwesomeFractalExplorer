@@ -5,10 +5,11 @@
 //language=GLSL
 export const MandelbulbFrag = `
 
+// variables ================================================================
+
 precision highp float;
 uniform vec2 res;
 uniform float zoom;
-uniform vec2 offset;
 
 // gui parameters
 uniform int iterations;
@@ -23,7 +24,6 @@ uniform float mb_n;
 uniform float mb_p;
 uniform float mb_q;
 
-// uniform vec3 cameraPosition;
 uniform vec3 cameraRotation;
 
 // whether turn on the animation
@@ -31,42 +31,42 @@ uniform vec3 cameraRotation;
 
 float pixel_size = 0.0;
 
-// rotates the point p around the y-axis by angle a
-void rotateAroundYAxis(inout vec3 p, float a){
-	float c, s;
-	vec3 q = p;
-	c = cos(a);
-	s = sin(a);
-	p.x = c * q.x + s * q.z;
-	p.z = -s * q.x + c * q.z;
-}
-
-// formula from https://de.wikipedia.org/wiki/Mandelbulb
-vec3 mb(vec3 c) {
+/*
+compute whether the point is escaping the boundaries after some iterations
+z = r*(sin(theta)cos(phi) + i cos(theta) + j sin(theta)sin(phi)
+zn+1 = zn^8 + c
+z^8 = r^8 * (sin(8*theta)*cos(8*phi) + i cos(8*theta) + j sin(8*theta)*sin(8*theta)
+zn+1' = 8 * zn^7 * zn' + 1
+*/
+vec3 mb(vec3 point) {
+	// formula from https://de.wikipedia.org/wiki/Mandelbulb
 	// changes the coordinate system, not much to it I think?!
 	// of course it changes the resulting fractal
-	c.xyz = c.xzy;
+	point.xyz = point.xzy;
 
-	// vector to compute restictedness for
-	vec3 v = c;
+	// point to compute restictedness for
+	vec3 v = point;
 
 	float power = parametersMandelbulb;
 
-	float r, phi, theta;
+	float phi, theta; // angles phi and theta
 	float cumulativeR = 1.0;
+
+	float r;
 	float R = trapR;
 
-	for(int i = 0; i < iterations; ++i) { // iterations; ++i) {
+	int i = 0;
+	while (i < iterations){
 		r = length(v);
 
 		phi = atan(v.y / v.x);
 		theta = acos(v.z / r);
 	
 		// check whether orbit is ok (same as for mandelbrot)
-		// if distance is bigger than 2.0, don't compute on
+		// if distance is bigger than 2.0, don't compute
 		if(r > 2.0) break;
 	
-		// what the hell is cumulativeR (dr previously)?
+		// compute zn+1'
 		cumulativeR = pow(r, power - 1.0) * cumulativeR * power + 1.0;
 
 		// compute next step variables
@@ -74,9 +74,12 @@ vec3 mb(vec3 c) {
 		phi = phi * power;
 		theta = theta * power;
 		
-		v = r * vec3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta)) + c;
+		// compute z^8
+		v = r * vec3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta)) + point;
 		
 		R = min(R, r);
+
+		i = i + 1;
 	}
 
 	// why this?
@@ -84,20 +87,22 @@ vec3 mb(vec3 c) {
 	// return v;
 }
 
-float softshadow(vec3 rotation, vec3 rd, float k ){
+float softshadow(vec3 rayOrigin, vec3 rayDirection, float k ){
 	float akuma=1.0,h=0.0;
 	float t = 0.01;
 	for(int i=0; i < 50; ++i){
-		h = mb(rotation+rd*t).x;
+		h = mb(rayOrigin+rayDirection*t).x;
 		if(h<0.001)return 0.02;
 		akuma=min(akuma, k*h/t);
 		t+=clamp(h,0.01,2.0);
 	}
+	//TODO:
+	return 1.0;
 	return akuma;
 }
 
-vec3 nor( in vec3 pos )
-{
+// compute normal vector via the central difference method
+vec3 normalVector( vec3 pos ) {
 	vec3 eps = vec3(0.001,0.0,0.0);
 	return normalize( vec3(
 		mb(pos+eps.xyy).x - mb(pos-eps.xyy).x,
@@ -105,8 +110,7 @@ vec3 nor( in vec3 pos )
 		mb(pos+eps.yyx).x - mb(pos-eps.yyx).x ) );
 }
 
-vec3 intersect( in vec3 rotation, in vec3 rd )
-{
+vec3 intersect( in vec3 rayOrigin, in vec3 rayDirection ) {
 	float t = 1.0;
 	float res_t = 0.0;
 	float res_d = 1000.0;
@@ -125,7 +129,7 @@ vec3 intersect( in vec3 rotation, in vec3 rd )
 		}
 		else{  // avoid broken shader on windows
 	
-			c = mb(rotation + rd*t);
+			c = mb(rayOrigin + rayDirection*t);
 			d = c.x;
 
 			if(d > os)
@@ -156,78 +160,68 @@ vec3 intersect( in vec3 rotation, in vec3 rd )
 	return vec3(res_t, res_c.y, res_c.z);
 }
 
-vec4 mandelbulb( vec2 uv )
-{
-	vec3 iRes = vec3(res, 0.0);
-	vec2 q = gl_FragCoord.xy/iRes.xy;
-	// vec2 uv = -1.0 + 2.0*q;
-	// uv.x*=iRes.x/iRes.y;
+vec4 mandelbulb( vec2 uv ) {
+	pixel_size = 1.0/(res.x * 3.0);
 
-	pixel_size = 1.0/(iRes.x * 3.0);
-	// camera
-	// float sinusRotation = 0.7+0.3*sin(0.4);
-	// float cosinusRotation = 0.7+0.3*cos(0.4);
+	vec2 q = gl_FragCoord.xy/res;
 
-	// vec3 rotation = vec3(0.0, 3.*sinusRotation*cosinusRotation, 3.*(1.-sinusRotation*cosinusRotation));
-	vec3 rotation = cameraPosition;
+	vec3 rayOrigin = cameraPosition;
 
-	vec3 cf = normalize(-rotation);
+	vec3 cf = normalize(-rayOrigin);
 	vec3 cs = normalize(cross(cf,vec3(0.0,1.0,0.0)));
 	vec3 cu = normalize(cross(cs,cf));
-	vec3 rd = normalize(uv.x*cs + uv.y*cu + 3.0*cf);  // transform from view to world
+	vec3 rayDirection = normalize(uv.x*cs + uv.y*cu + 3.0*cf);  // transform from view to world
 
+	// light direction
 	vec3 sundir = normalize(vec3(0.1, 0.8, 0.6));
-	vec3 sun = vec3(1.64, 1.27, 0.99);
-	vec3 skycolor = vec3(0.6, 1.5, 1.0);
+	// environment light color
+	vec3 skyColor = vec3(0.6, 1.5, 1.0);
+	// diffuse light color
+	vec3 lightColor = vec3(1.64, 1.27, 0.99);
 
-	vec3 bg = exp(uv.y-2.0)*vec3(0.4, 1.6, 1.0);
-
-	float halo = clamp(dot(normalize(vec3(-rotation.x, -rotation.y, -rotation.z)), rd), 0.0, 1.0);
-	vec3 col = bg+vec3(1.0,0.8,0.4)*pow(halo, 17.0);
+	float halo = clamp(dot(normalize(vec3(-rayOrigin.x, -rayOrigin.y, -rayOrigin.z)), rayDirection), 0.0, 1.0);
+	vec3 col = vec3(1.0,0.8,0.4)*pow(halo, 17.0);
 
 	float t = 0.0;
-	vec3 p = rotation;
-	vec3 res = intersect(rotation, rd);
+	vec3 p = rayOrigin;
+	vec3 res = intersect(rayOrigin, rayDirection);
 
 	if(res.x > 0.0){
-		p = rotation + res.x * rd;
-		vec3 n=nor(p);
+		p = rayOrigin + res.x * rayDirection;
+		vec3 n = normalVector(p);
 		float shadow = softshadow(p, sundir, 10.0 );
 
-		float dif = max(0.0, dot(n, sundir));
-		float sky = 0.6 + 0.4 * max(0.0, dot(n, vec3(0.0, 1.0, 0.0)));
-		float bac = max(0.3 + 0.7 * dot(vec3(-sundir.x, -1.0, -sundir.z), n), 0.0);
-		float spe = max(0.0, pow(clamp(dot(sundir, reflect(rd, n)), 0.0, 1.0), 10.0));
+		// light from the angle of the sun
+		float diffuseLight = max(0.0, dot(n, sundir));
+		// light from straight above, at least 0.6, up to 1.0
+		float skyLight = 0.6 + 0.4 * max(0.0, dot(n, vec3(0.0, 1.0, 0.0)));
+		// ambient light
+		float ambientLight = max(0.3 + 0.7 * dot(vec3(-sundir.x, -1.0, -sundir.z), n), 0.0);
+		// specular light
+		float specularLight = max(0.0, pow(clamp(dot(sundir, reflect(rayDirection, n)), 0.0, 1.0), 10.0));
 
-		vec3 lin = 4.5 * sun * dif * shadow;
-		lin += 0.8 * bac * sun;
-		lin += 0.6 * sky * skycolor*shadow;
-		lin += 3.0 * spe * shadow;
+		vec3 phongShading = shadow * ((4.5 * lightColor * diffuseLight) + (0.6 * skyColor * skyLight) + (3.0 * specularLight)) + 0.8 * ambientLight * lightColor;
 
 		res.y = pow(clamp(res.y, 0.0, 1.0), 0.55);
-		vec3 tc0 = 0.5 + 0.5 * sin(3.0 + 4.2 * res.y + vec3(0.0, 0.5, 1.0));
-		col = lin *vec3(0.9, 0.8, 0.6) *  0.2 * tc0;
-		col=mix(col,bg, 1.0-exp(-0.001*res.x*res.x));
+		vec3 baseColor = vec3(0.9, 0.8, 0.6);
+		vec3 colorByHeight = 0.5 + 0.5 * sin(3.0 + 4.2 * res.y + vec3(0.0, 0.5, 1.0));
+		col = phongShading * baseColor * colorByHeight * 0.2;
 	}
 
-	// post
+	// post color improvement
 	col=pow(clamp(col,0.0,1.0),vec3(0.45));
 	col=col*0.6+0.4*col*col*(3.0-2.0*col);  // contrast
-	col=mix(col, vec3(dot(col, vec3(0.33))), -0.5);  // satuation
+	col=mix(col, vec3(dot(col, vec3(0.33))), -0.5);  // saturation
 	col*=0.5+0.5*pow(16.0*q.x*q.y*(1.0-q.x)*(1.0-q.y),0.7);  // vigneting
 
-	return vec4(col.xyz, smoothstep(0.55, .76, 1.-res.x/5.));
+	// return vec4(col.xyz * color, 1.0); // smoothstep(0.55, .76, 1.-res.x/5.));
+	return vec4(col, 1.0); // smoothstep(0.55, .76, 1.-res.x/5.));
 }
 
 void main() {
-	// get the 3D-uv coordinates
-	vec2 uv = zoom * (2.0*gl_FragCoord.xy-res.xy)/res.y + offset;
+	vec2 uv = zoom * (2.0*gl_FragCoord.xy-res.xy)/res.y;
 
-	// compute the current alpha value
-	vec4 brightness = vec4(0);
-	brightness += mandelbulb(uv);
-
-	gl_FragColor = vec4(brightness.xyz * color, brightness.a);
+	gl_FragColor = mandelbulb(uv);
 }
 
- `;
+`;

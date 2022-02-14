@@ -12,13 +12,13 @@ import { MandelbrotFrag } from "./fractalShaders/mandelbrot.frag";
 import { KochsnowflakeFrag } from "./fractalShaders/kochsnowflake.frag";
 import { JuliaSetFrag } from "./fractalShaders/juliaset.frag";
 import { MandelbulbFrag } from "./fractalShaders/mandelbulb.frag";
-import { MandelbulbFractallabFrag } from "./fractalShaders/mandelbulb.fractallab.frag";
-import { IsoFrag } from "./fractalShaders/isoShader.frag";
+// import { MandelbulbFractallabFrag } from "./fractalShaders/mandelbulb.fractallab.frag";
+// import { IsoFrag } from "./fractalShaders/isoShader.frag";
 
 // other
-import { VaryingVert } from "./other/varying.vert";
-import { SpriteVert } from "./other/sprite.vert";
-import { SpriteFrag } from "./other/sprite.frag";
+// import { VaryingVert } from "./other/varying.vert";
+// import { SpriteVert } from "./other/sprite.vert";
+// import { SpriteFrag } from "./other/sprite.frag";
 
 const shaders = [
   "Mandelbrot",
@@ -43,7 +43,6 @@ let geometry, material, mesh;
 let uniforms;
 
 let aspect = window.innerWidth / window.innerHeight;
-let offset = new THREE.Vector2();
 
 // TODO: apply zoom updating for resolution resetting on-the-fly
 const MIN_ZOOM = 2.0;
@@ -138,7 +137,7 @@ function init() {
   );
 
   // set the camera position x,y,z in the scene
-  camera.position.set(0, 2, 0);
+  camera.position.set(0, 2.5, 0);
 
   // add controls to the camera
   controls = new OrbitControls(camera, renderer.domElement);
@@ -151,10 +150,7 @@ function init() {
   // controls.autoRotate = true;
   // enable/disable damping effect on controls
   // controls.enableDamping = true;
-
   // controls.enableZoom = false;
-  // TODO: use this function to toggle between 2D and 3D?!
-  controls.enableRotate = false;
 
   /*
    * setup GUI
@@ -287,9 +283,7 @@ function init() {
       type: "vec2",
       value: new THREE.Vector2(window.innerWidth, window.innerHeight),
     },
-    aspect: { type: "float", value: aspect },
     zoom: { type: "float", value: zoom },
-    offset: { type: "vec2", value: offset },
     parametersMandelbrot1: {
       type: "vec3",
       value: new THREE.Vector3(
@@ -353,8 +347,6 @@ function animate() {
   requestAnimationFrame(animate);
 
   // for moving the fractal
-  offset = new THREE.Vector2(camera.position.x, -camera.position.z);
-  uniforms.offset.value = offset;
   // const distance = controls.object.position.distanceTo(controls.target);
   // console.log(distance);
 
@@ -400,7 +392,6 @@ id_btnCloseNotification.addEventListener("click", onCloseNotifcationWindow);
 
 function windowResize() {
   // aspect intentionally not updated -> ?
-  aspect = window.innerWidth / window.innerHeight;
   camera.aspect = aspect;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -530,7 +521,8 @@ function onFractalSelect(key = "") {
         fragmentShader: MandelbrotFrag,
         side: THREE.DoubleSide,
       });
-      // controls.enableRotate = false;
+      controls.enableRotate = false;
+      controls.enablePan = true;
       gui.open();
       guiMandelbrot.open();
       guiJuliaSet.close();
@@ -557,6 +549,8 @@ function onFractalSelect(key = "") {
         fragmentShader: KochsnowflakeFrag,
         side: THREE.DoubleSide,
       });
+      controls.enableRotate = false;
+      controls.enablePan = true;
       gui.close();
       break;
 
@@ -566,6 +560,8 @@ function onFractalSelect(key = "") {
         fragmentShader: JuliaSetFrag,
         side: THREE.DoubleSide,
       });
+      controls.enableRotate = false;
+      controls.enablePan = true;
       gui.open();
       guiMandelbrot.close();
       guiJuliaSet.open();
@@ -578,6 +574,8 @@ function onFractalSelect(key = "") {
         fragmentShader: MandelbulbFrag,
         side: THREE.DoubleSide,
       });
+      controls.enableRotate = true;
+      controls.enablePan = false;
       gui.open();
       guiMandelbrot.close();
       guiJuliaSet.close();
