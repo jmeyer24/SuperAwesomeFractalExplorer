@@ -7,17 +7,17 @@ export const MandelbulbFrag = `
 
 precision highp float;
 uniform vec2 res;
-// TODO: define for 3D
-// vec3 iRes = vec3(res, 0.0);
 uniform float zoom;
 uniform vec2 offset;
 
 // gui parameters
 uniform int iterations;
+// why 8? seems to be standard for rendering, can be changed
+uniform float parametersMandelbulb; // == mandelbulb_power
+
 uniform vec3 color;
 uniform float trapR;
 
-// TODO
 // see for the respective variables https://de.wikipedia.org/wiki/Mandelbulb
 uniform float mb_n;
 uniform float mb_p;
@@ -50,8 +50,7 @@ vec3 mb(vec3 c) {
 	// vector to compute restictedness for
 	vec3 v = c;
 
-	// why 8? seems to be standard for rendering, can be changed
-	float power = 8.0; // == mandelbulb_power
+	float power = parametersMandelbulb;
 
 	float r, phi, theta;
 	float cumulativeR = 1.0;
@@ -170,7 +169,7 @@ vec4 mandelbulb( vec2 uv )
 	// float cosinusRotation = 0.7+0.3*cos(0.4);
 
 	// vec3 rotation = vec3(0.0, 3.*sinusRotation*cosinusRotation, 3.*(1.-sinusRotation*cosinusRotation));
-	vec3 rotation = cameraPosition; // ... cameraRotation; // TODO: why is it called rotation if it's about the position of the camera???
+	vec3 rotation = cameraPosition;
 
 	vec3 cf = normalize(-rotation);
 	vec3 cs = normalize(cross(cf,vec3(0.0,1.0,0.0)));
@@ -222,7 +221,7 @@ vec4 mandelbulb( vec2 uv )
 
 void main() {
 	// get the 3D-uv coordinates
-	vec2 uv = zoom * (2.0*gl_FragCoord.xy-res.xy)/res.y + offset; // TODO: this offset needs to be controls.position!!!
+	vec2 uv = zoom * (2.0*gl_FragCoord.xy-res.xy)/res.y + offset;
 
 	// compute the current alpha value
 	vec4 brightness = vec4(0);
