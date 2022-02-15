@@ -102,8 +102,10 @@ while (i < iterations && complexMagnitude(z) <= 4.0) {
 float colorValue = float(i)/float(iterations);
 // some fancy stuff happening
 if(parametersFancy){
-	if(z_0_mag <= 4.0){
-		colorValue = (float(i) - 1.0 + (12.0 - z_1_mag) / (z_0_mag - z_1_mag))/float(iterations);
+	if(complexMagnitude(z) > 4.0){
+		if(z_0_mag <= 4.0){
+			colorValue = (float(i) - 1.0 + (12.0 - z_1_mag) / (z_0_mag - z_1_mag))/float(iterations);
+		}
 	}
 }
 vec3 col = vec3(0);

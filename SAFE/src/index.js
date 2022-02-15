@@ -33,13 +33,7 @@ const shaders = [
 ];
 
 let camera, controls, zoom;
-let gui,
-  guiMandelbrot,
-  guiParameters,
-  guiFancyMandelbrot,
-  guiColor,
-  guiJuliaSet,
-  guiMandelbulb;
+let gui, guiMandelbrot, guiParameters, guiColor, guiJuliaSet, guiMandelbulb;
 let scene, renderer, canvas, context;
 let geometry, material, mesh;
 let uniforms;
@@ -57,7 +51,7 @@ const MAX_ZOOM = 0.000005;
 let requestDownload = false;
 let inSettingMode = false;
 let previousFractal = "";
-const initialFractal = "Mandelbulb";
+const initialFractal = "Mandelbrot";
 const iterations = 200;
 const maxKochsnowflakeIterations = 20;
 let fractalColor = "#CC3333"; // "#CC3333"; red "#2070DF"; blue "#1E0064" violet "#66cc33" green
@@ -91,9 +85,9 @@ let id_bt_settings = document.getElementById("bt_settings");
 let id_colorSelector = document.getElementById("colorSelector");
 id_colorSelector.value = fractalColor;
 
-let id_colorIntensity = document.getElementById("colorIntensity");
+// let id_colorIntensity = document.getElementById("colorIntensity");
 
-let id_colorScale = document.getElementById("colorScale");
+// let id_colorScale = document.getElementById("colorScale");
 
 let id_bt_reset = document.getElementById("bt_reset");
 let id_bt_download = document.getElementById("bt_download");
@@ -164,18 +158,25 @@ function init() {
   gui.close();
   guiMandelbrot = gui.addFolder("Mandelbrot");
   guiMandelbrot.close();
-  guiParameters = guiMandelbrot.addFolder("Parameters");
+  guiParameters = guiMandelbrot.addFolder("Function Parameters");
   guiParameters.close();
-  // guiFancyMandelbrot = guiMandelbrot.addFolder("FancyMandelbrot");
-  // guiFancyMandelbrot.close();
-  // guiColor = guiMandelbrot.addFolder("ColorScale");
-  // guiColor.close();
+  guiColor = guiMandelbrot.addFolder("Color Scale Options");
+  guiColor.close();
   guiJuliaSet = gui.addFolder("Julia Set");
   guiJuliaSet.close();
   guiMandelbulb = gui.addFolder("Mandelbulb");
   guiMandelbulb.close();
 
   // mandelbrot parameters
+  let parametersFancy = {
+    fancyMandelbrot: false,
+  };
+  guiMandelbrot
+    .add(parametersFancy, "fancyMandelbrot", false)
+    .onChange(function () {
+      uniforms.parametersFancy.value = parametersFancy.fancyMandelbrot;
+    });
+
   let parametersMandelbrot = {
     a: 1.0,
     b: 0.0,
@@ -201,29 +202,28 @@ function init() {
       });
   }
 
-  let parametersFancy = {
-    fancyMandelbrot: false,
-  };
-  guiMandelbrot
-    .add(parametersFancy, "fancyMandelbrot", false)
-    .onChange(function () {
-      uniforms.parametersFancy.value = parametersFancy.fancyMandelbrot;
-    });
-
   let parametersColor = {
     colorScale: 0.0,
+    colorScaleBool: false,
+    colorIntensity: 10.0,
     colorDiversity: 1.0,
     haloBool: true,
   };
+  guiColor.add(parametersColor, "colorScaleBool", false).onChange(function () {
+    uniforms.colorScaleBool.value = parametersColor.colorScaleBool;
+  });
+  guiMandelbrot
+    .add(parametersColor, "colorIntensity", 1.0, 20.0, 0.1)
+    .onChange(function () {
+      uniforms.colorIntensity.value = parametersColor.colorIntensity;
+    });
   ["colorScale", "colorDiversity"].forEach(function (key, index) {
-    guiMandelbrot
-      .add(parametersColor, key, 0.0, 1.0, 0.01)
-      .onChange(function () {
-        uniforms.parametersColor.value = new THREE.Vector2(
-          parametersColor.colorScale,
-          parametersColor.colorDiversity
-        );
-      });
+    guiColor.add(parametersColor, key, 0.0, 1.0, 0.01).onChange(function () {
+      uniforms.parametersColor.value = new THREE.Vector2(
+        parametersColor.colorScale,
+        parametersColor.colorDiversity
+      );
+    });
   });
 
   // juliaset parameters
@@ -233,7 +233,7 @@ function init() {
   };
   for (let key in parametersJulia) {
     guiJuliaSet
-      .add(parametersJulia, key, -1.0, 1.0, 0.01)
+      .add(parametersJulia, key, -1.0, 1.0, 0.0001)
       .onChange(function () {
         uniforms.parametersJulia.value = new THREE.Vector2(
           parametersJulia.real,
@@ -292,8 +292,8 @@ function init() {
   mesh.position.set(0, 0, -7.5);
 
   // enable grid helper for 3D rotation check
-  const gridHelper = new THREE.GridHelper(50, 50);
-  scene.add(gridHelper);
+  // const gridHelper = new THREE.GridHelper(50, 50);
+  // scene.add(gridHelper);
 
   /*
    * setup shader uniforms
@@ -348,8 +348,8 @@ function init() {
     // type "c" for color
     // https://stackoverflow.com/questions/32660646/three-js-define-uniforms-for-fragment-shader
     color: { type: "c", value: fractalColor },
-    colorIntensity: { type: "float", value: colorIntensity },
-    colorScaleBool: { type: "bool", value: colorScaleBool },
+    colorIntensity: { type: "float", value: parametersColor.colorIntensity },
+    colorScaleBool: { type: "bool", value: parametersColor.colorScaleBool },
     haloBool: { type: "bool", value: parametersColor.haloBool },
     haloColor: { type: "c", value: haloColor },
     trapR: { type: "float", value: 1e20 },
@@ -365,8 +365,8 @@ function init() {
   onFractalSelect();
   onIterations();
   onColorSelect();
-  onColorScale();
-  onColorIntensity();
+  // onColorScale();
+  // onColorIntensity();
 }
 
 function animate() {
@@ -409,8 +409,8 @@ id_iterations.addEventListener("input", onIterations);
 id_fractalSelector.addEventListener("change", onFractalSelect);
 id_bt_settings.addEventListener("click", onClickSettingsMenu);
 id_colorSelector.addEventListener("input", onColorSelect);
-id_colorIntensity.addEventListener("input", onColorIntensity);
-id_colorScale.addEventListener("change", onColorScale);
+// id_colorIntensity.addEventListener("input", onColorIntensity);
+// id_colorScale.addEventListener("change", onColorScale);
 id_bt_reset.addEventListener("click", onReset);
 id_bt_download.addEventListener("click", onDownload);
 id_btnCloseNotification.addEventListener("click", onCloseNotifcationWindow);
@@ -448,15 +448,15 @@ function onKeydown(event) {
       case "s":
         id_iterations.focus();
         break;
+      // case "d":
+      //   id_colorIntensity.focus();
+      //   break;
       case "d":
-        id_colorIntensity.focus();
-        break;
-      case "f":
         id_colorSelector.click();
         break;
-      case "g":
-        id_colorScale.click();
-        break;
+      // case "g":
+      //   id_colorScale.click();
+      //   break;
       case "u":
         // this input is of type "submit", so it reloads the page when confirmed
         // id_bt_load.click();
@@ -547,10 +547,10 @@ function onChangeFromToKoch(curFrac, preFrac) {
   onIterations();
 }
 
-function onColorScale() {
-  colorScaleBool = id_colorScale.checked ? true : false;
-  uniforms.colorScaleBool.value = colorScaleBool;
-}
+// function onColorScale() {
+//   colorScaleBool = id_colorScale.checked ? true : false;
+//   uniforms.colorScaleBool.value = colorScaleBool;
+// }
 
 function onFractalSelect(key = "") {
   onChangeFromToKoch(id_fractalSelector.value, previousFractal);
@@ -566,10 +566,12 @@ function onFractalSelect(key = "") {
       });
       controls.enableRotate = false;
       controls.enablePan = true;
-      gui.open();
       guiMandelbrot.open();
       guiJuliaSet.close();
       guiMandelbulb.close();
+      if (inSettingMode) {
+        gui.open();
+      }
       break;
 
     // case "MandelbrotIterationChange":
@@ -594,6 +596,9 @@ function onFractalSelect(key = "") {
       });
       controls.enableRotate = false;
       controls.enablePan = true;
+      guiMandelbrot.close();
+      guiJuliaSet.close();
+      guiMandelbulb.close();
       gui.close();
       break;
 
@@ -605,10 +610,12 @@ function onFractalSelect(key = "") {
       });
       controls.enableRotate = false;
       controls.enablePan = true;
-      gui.open();
       guiMandelbrot.close();
       guiJuliaSet.open();
       guiMandelbulb.close();
+      if (inSettingMode) {
+        gui.open();
+      }
       break;
 
     case "Mandelbulb":
@@ -619,25 +626,28 @@ function onFractalSelect(key = "") {
       });
       controls.enableRotate = true;
       controls.enablePan = false;
-      gui.open();
       guiMandelbrot.close();
       guiJuliaSet.close();
       guiMandelbulb.open();
+      if (inSettingMode) {
+        gui.open();
+      }
       break;
 
-    case "Test":
-      mesh.material = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        fragmentShader: TestFrag,
-        side: THREE.DoubleSide,
-      });
-      controls.enableRotate = true;
-      controls.enablePan = false;
-      gui.open();
-      guiMandelbrot.close();
-      guiJuliaSet.close();
-      guiMandelbulb.open();
-      break;
+    // case "Test":
+    //   mesh.material = new THREE.ShaderMaterial({
+    //     uniforms: uniforms,
+    //     fragmentShader: TestFrag,
+    //     side: THREE.DoubleSide,
+    //   });
+    //   controls.enableRotate = true;
+    //   controls.enablePan = false;
+    //   gui.open();
+    //   guiMandelbrot.close();
+    //   guiJuliaSet.close();
+    //   guiMandelbulb.open();
+    //   gui.close();
+    //   break;
 
     // case "MandelbulbFractallab":
     //   mesh.material = new THREE.ShaderMaterial({
@@ -672,8 +682,10 @@ function onFractalSelect(key = "") {
 function onClickSettingsMenu() {
   if (inSettingMode) {
     id_outerSettings.style.display = "none";
+    gui.close();
   } else {
     id_outerSettings.style.display = "block";
+    gui.open();
   }
   inSettingMode = !inSettingMode;
 }
@@ -685,10 +697,10 @@ function onColorSelect() {
   uniforms.haloColor.value = haloColor;
 }
 
-function onColorIntensity() {
-  uniforms.colorIntensity.value = id_colorIntensity.value;
-  id_colorIntensity.nextElementSibling.value = id_colorIntensity.value;
-}
+// function onColorIntensity() {
+//   uniforms.colorIntensity.value = id_colorIntensity.value;
+//   id_colorIntensity.nextElementSibling.value = id_colorIntensity.value;
+// }
 
 function onScroll(event) {
   if (id_fractalSelector.value == "Mandelbulb") return;
