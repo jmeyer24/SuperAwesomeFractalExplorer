@@ -1,5 +1,8 @@
 // https://www.shadertoy.com/view/MdXSWn#
 // Created by evilryu
+// Adapted by Leonie Mödl and Jakob Meyer
+// for OpenGL
+//
 // License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
 //language=GLSL
@@ -15,6 +18,7 @@ uniform float zoom;
 uniform int iterations;
 // why 8? seems to be standard for rendering, can be changed
 uniform float parametersMandelbulb; // == mandelbulb_power
+uniform float parametersPixel;
 
 uniform vec3 color;
 uniform float trapR;
@@ -25,6 +29,9 @@ uniform float mb_p;
 uniform float mb_q;
 
 uniform vec3 cameraRotation;
+
+uniform vec3 haloColor;
+uniform bool haloBool;
 
 // whether turn on the animation
 // #define phase_shift_on
@@ -38,7 +45,7 @@ zn+1 = zn^8 + c
 z^8 = r^8 * (sin(8*theta)*cos(8*phi) + i cos(8*theta) + j sin(8*theta)*sin(8*theta)
 zn+1' = 8 * zn^7 * zn' + 1
 */
-vec3 mb(vec3 point) {
+vec3 mandelbulb(vec3 point) {
 	// formula from https://de.wikipedia.org/wiki/Mandelbulb
 	// changes the coordinate system, not much to it I think?!
 	// of course it changes the resulting fractal
@@ -74,7 +81,7 @@ vec3 mb(vec3 point) {
 		phi = phi * power;
 		theta = theta * power;
 		
-		// compute z^8
+		// compute z^8 + c
 		v = r * vec3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta)) + point;
 		
 		R = min(R, r);
@@ -84,14 +91,13 @@ vec3 mb(vec3 point) {
 
 	// why this?
 	return vec3(0.5 * log(r) * r / cumulativeR, R, 0.0);
-	// return v;
 }
 
 float softshadow(vec3 rayOrigin, vec3 rayDirection, float k ){
 	float akuma=1.0,h=0.0;
 	float t = 0.01;
 	for(int i=0; i < 50; ++i){
-		h = mb(rayOrigin+rayDirection*t).x;
+		h = mandelbulb(rayOrigin+rayDirection*t).x;
 		if(h<0.001)return 0.02;
 		akuma=min(akuma, k*h/t);
 		t+=clamp(h,0.01,2.0);
@@ -105,9 +111,9 @@ float softshadow(vec3 rayOrigin, vec3 rayDirection, float k ){
 vec3 normalVector( vec3 pos ) {
 	vec3 eps = vec3(0.001,0.0,0.0);
 	return normalize( vec3(
-		mb(pos+eps.xyy).x - mb(pos-eps.xyy).x,
-		mb(pos+eps.yxy).x - mb(pos-eps.yxy).x,
-		mb(pos+eps.yyx).x - mb(pos-eps.yyx).x ) );
+		mandelbulb(pos+eps.xyy).x - mandelbulb(pos-eps.xyy).x,
+		mandelbulb(pos+eps.yxy).x - mandelbulb(pos-eps.yxy).x,
+		mandelbulb(pos+eps.yyx).x - mandelbulb(pos-eps.yyx).x ) );
 }
 
 vec3 intersect( in vec3 rayOrigin, in vec3 rayDirection ) {
@@ -129,7 +135,7 @@ vec3 intersect( in vec3 rayOrigin, in vec3 rayDirection ) {
 		}
 		else{  // avoid broken shader on windows
 	
-			c = mb(rayOrigin + rayDirection*t);
+			c = mandelbulb(rayOrigin + rayDirection*t);
 			d = c.x;
 
 			if(d > os)
@@ -160,8 +166,9 @@ vec3 intersect( in vec3 rayOrigin, in vec3 rayDirection ) {
 	return vec3(res_t, res_c.y, res_c.z);
 }
 
-vec4 mandelbulb( vec2 uv ) {
-	pixel_size = 1.0/(res.x * 3.0);
+vec4 render( vec2 uv ) {
+	float pixelRatio = parametersPixel;
+	pixel_size = pixelRatio/(2.0*res.x);
 
 	vec2 q = gl_FragCoord.xy/res;
 
@@ -179,8 +186,11 @@ vec4 mandelbulb( vec2 uv ) {
 	// diffuse light color
 	vec3 lightColor = vec3(1.64, 1.27, 0.99);
 
-	float halo = clamp(dot(normalize(vec3(-rayOrigin.x, -rayOrigin.y, -rayOrigin.z)), rayDirection), 0.0, 1.0);
-	vec3 col = vec3(1.0,0.8,0.4)*pow(halo, 17.0);
+	vec3 col = vec3(0.0);
+	if(haloBool){
+		float halo = clamp(dot(normalize(vec3(-rayOrigin.x, -rayOrigin.y, -rayOrigin.z)), rayDirection), 0.0, 1.0);
+		col = color * pow(halo, 17.0);
+	}
 
 	float t = 0.0;
 	vec3 p = rayOrigin;
@@ -221,7 +231,7 @@ vec4 mandelbulb( vec2 uv ) {
 void main() {
 	vec2 uv = zoom * (2.0*gl_FragCoord.xy-res.xy)/res.y;
 
-	gl_FragColor = mandelbulb(uv);
+	gl_FragColor = render(uv);
 }
 
 `;

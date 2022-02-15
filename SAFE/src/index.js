@@ -12,6 +12,7 @@ import { MandelbrotFrag } from "./fractalShaders/mandelbrot.frag";
 import { KochsnowflakeFrag } from "./fractalShaders/kochsnowflake.frag";
 import { JuliaSetFrag } from "./fractalShaders/juliaset.frag";
 import { MandelbulbFrag } from "./fractalShaders/mandelbulb.frag";
+import { TestFrag } from "./fractalShaders/test.frag";
 // import { MandelbulbFractallabFrag } from "./fractalShaders/mandelbulb.fractallab.frag";
 // import { IsoFrag } from "./fractalShaders/isoShader.frag";
 
@@ -26,6 +27,7 @@ const shaders = [
   "Kochsnowflake",
   "Juliaset",
   "Mandelbulb",
+  // "Test",
   // "MandelbulbFractallab",
   // "Iso",
 ];
@@ -61,6 +63,8 @@ const maxKochsnowflakeIterations = 20;
 let fractalColor = "#CC3333"; // "#CC3333"; red "#2070DF"; blue "#1E0064" violet "#66cc33" green
 let colorIntensity = 10.0;
 let colorScaleBool = false;
+let haloBool = true;
+let haloColor = fractalColor;
 let colorScale = 240.0;
 
 // html elements ==============================================================
@@ -132,8 +136,8 @@ function init() {
   camera = new THREE.PerspectiveCamera(
     70,
     window.innerWidth / window.innerHeight,
-    0.01,
-    100
+    0.0001,
+    1000
   );
 
   // set the camera position x,y,z in the scene
@@ -209,8 +213,9 @@ function init() {
   let parametersColor = {
     colorScale: 0.0,
     colorDiversity: 1.0,
+    haloBool: true,
   };
-  for (let key in parametersColor) {
+  ["colorScale", "colorDiversity"].forEach(function (key, index) {
     guiMandelbrot
       .add(parametersColor, key, 0.0, 1.0, 0.01)
       .onChange(function () {
@@ -219,7 +224,7 @@ function init() {
           parametersColor.colorDiversity
         );
       });
-  }
+  });
 
   // juliaset parameters
   let parametersJulia = {
@@ -248,6 +253,22 @@ function init() {
         uniforms.parametersMandelbulb.value = parametersMandelbulb.power;
       });
   }
+  let parametersPixel = {
+    pixelRatio: 5.0,
+  };
+  guiMandelbulb
+    .add(parametersPixel, "pixelRatio", 0.1, 8.0, 0.1)
+    .onChange(function () {
+      uniforms.parametersPixel.value = parametersPixel.pixelRatio;
+    });
+  guiMandelbulb.add(parametersColor, "haloBool", false).onChange(function () {
+    uniforms.haloBool.value = parametersColor.haloBool;
+  });
+  // guiMandelbulb
+  //   .add(parametersColor, "haloColor", "0xff0000")
+  //   .onChange(function () {
+  //     uniforms.parametersColor.value = parametersColor.haloColor;
+  //   });
 
   /*
    * setup the scene with a plane, a box and a grid
@@ -316,8 +337,12 @@ function init() {
       value: new THREE.Vector2(parametersJulia.real, parametersJulia.imaginary),
     },
     parametersMandelbulb: {
-      type: "int",
+      type: "float",
       value: parametersMandelbulb.power,
+    },
+    parametersPixel: {
+      type: "float",
+      value: parametersPixel.pixelRatio,
     },
     iterations: { type: "int", value: iterations },
     // type "c" for color
@@ -325,6 +350,8 @@ function init() {
     color: { type: "c", value: fractalColor },
     colorIntensity: { type: "float", value: colorIntensity },
     colorScaleBool: { type: "bool", value: colorScaleBool },
+    haloBool: { type: "bool", value: parametersColor.haloBool },
+    haloColor: { type: "c", value: haloColor },
     trapR: { type: "float", value: 1e20 },
     // time: { type: "double", value: Date.now() },
     // cameraPosition: { type: "vec3", value: camera.position },
@@ -475,8 +502,16 @@ function onChangeFromToKoch(curFrac, preFrac) {
   let max = iterations;
   let min = 1.0;
 
-  if (preFrac == "Kochsnowflake" || preFrac == "Mandelbulb") {
-    if (curFrac == "Kochsnowflake" || curFrac == "Mandelbulb") {
+  if (
+    preFrac == "Kochsnowflake" ||
+    preFrac == "Mandelbulb" ||
+    preFrac == "Test"
+  ) {
+    if (
+      curFrac == "Kochsnowflake" ||
+      curFrac == "Mandelbulb" ||
+      curFrac == "Test"
+    ) {
       return;
     }
     exponent = 1.0;
@@ -484,8 +519,16 @@ function onChangeFromToKoch(curFrac, preFrac) {
       id_iterations.value = 1.0;
     }
     id_iterations.max = max;
-  } else if (curFrac == "Kochsnowflake" || curFrac == "Mandelbulb") {
-    if (preFrac == "Kochsnowflake" || preFrac == "Mandelbulb") {
+  } else if (
+    curFrac == "Kochsnowflake" ||
+    curFrac == "Mandelbulb" ||
+    curFrac == "Test"
+  ) {
+    if (
+      preFrac == "Kochsnowflake" ||
+      preFrac == "Mandelbulb" ||
+      preFrac == "Test"
+    ) {
       return;
     }
     exponent = -1.0;
@@ -582,6 +625,20 @@ function onFractalSelect(key = "") {
       guiMandelbulb.open();
       break;
 
+    case "Test":
+      mesh.material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        fragmentShader: TestFrag,
+        side: THREE.DoubleSide,
+      });
+      controls.enableRotate = true;
+      controls.enablePan = false;
+      gui.open();
+      guiMandelbrot.close();
+      guiJuliaSet.close();
+      guiMandelbulb.open();
+      break;
+
     // case "MandelbulbFractallab":
     //   mesh.material = new THREE.ShaderMaterial({
     //     uniforms: uniforms,
@@ -624,6 +681,8 @@ function onClickSettingsMenu() {
 function onColorSelect() {
   fractalColor = new THREE.Color(id_colorSelector.value);
   uniforms.color.value = fractalColor;
+  haloColor = new THREE.Color(id_colorSelector.value);
+  uniforms.haloColor.value = haloColor;
 }
 
 function onColorIntensity() {
