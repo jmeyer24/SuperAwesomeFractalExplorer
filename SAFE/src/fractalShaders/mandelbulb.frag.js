@@ -1,7 +1,7 @@
 // https://www.shadertoy.com/view/MdXSWn#
 // Created by evilryu
+//
 // Adapted by Leonie Mödl and Jakob Meyer
-// for OpenGL
 //
 // License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 

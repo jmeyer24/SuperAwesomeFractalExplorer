@@ -1,9 +1,14 @@
+// https://www.shadertoy.com/view/wdGBWc
+// uploaded by Thrump
+//
 // Koch Snowflake - by Martijn Steinrucken aka BigWings 2019
 // Email:countfrolic@gmail.com Twitter:@The_ArtOfCode
-// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
-//
 // This effect is part of a tutorial on YouTube
 // https://www.youtube.com/watch?v=il_Qg9AqQkE
+//
+// Adapted by Leonie Mödl and Jakob Meyer
+//
+// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
 export const KochsnowflakeFrag = `
 

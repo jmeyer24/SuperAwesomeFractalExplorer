@@ -50,7 +50,6 @@ float juliaset(vec2 uv) {
 		R = min(R, dot(uv,uv));
 	}
 
-	// why this?
 	alpha = 1.0+log2(R)/16.;
 	alpha = (-1.*alpha+1.);
 	return alpha;

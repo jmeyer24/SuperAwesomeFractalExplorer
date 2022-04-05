@@ -33,91 +33,93 @@ return a.x*a.x + a.y*a.y;
 }
 
 vec3 hsv2rgb(float hue, float saturation, float brightness) {
-// boundary conditions for input
-hue = mod(hue, 360.0);
-saturation = clamp(saturation, 0.0, 1.0);
-brightness = clamp(brightness, 0.0, 1.0);
+	// boundary conditions for input
+	hue = mod(hue, 360.0);
+	saturation = clamp(saturation, 0.0, 1.0);
+	brightness = clamp(brightness, 0.0, 1.0);
 
-// conversion formula
-// https://de.wikipedia.org/wiki/HSV-Farbraum#Transformation_von_HSV/HSL_und_RGB
-int h = int(floor(hue/60.0));
-float f = hue/60.0 - float(h);
+	// conversion formula
+	// https://de.wikipedia.org/wiki/HSV-Farbraum#Transformation_von_HSV/HSL_und_RGB
+	int h = int(floor(hue/60.0));
+	float f = hue/60.0 - float(h);
 
-float p = mod(brightness * (1.0 - saturation), 1.0);
-float q = mod(brightness * (1.0 - saturation * f), 1.0);
-float t = mod(brightness * (1.0 - saturation * (1.0 - f)), 1.0);
+	float p = mod(brightness * (1.0 - saturation), 1.0);
+	float q = mod(brightness * (1.0 - saturation * f), 1.0);
+	float t = mod(brightness * (1.0 - saturation * (1.0 - f)), 1.0);
 
-switch (h) {
-	case 1:
-		return vec3(q, brightness, p);
-	case 2:
-		return vec3(p, brightness, t);
-	case 3:
-		return vec3(p, q, brightness);
-	case 4:
-		return vec3(t, p, brightness);
-	case 5:
-		return vec3(brightness, p, q);
-	default:
-		return vec3(brightness, t, p);
-}
+	switch (h) {
+		case 1:
+			return vec3(q, brightness, p);
+		case 2:
+			return vec3(p, brightness, t);
+		case 3:
+			return vec3(p, q, brightness);
+		case 4:
+			return vec3(t, p, brightness);
+		case 5:
+			return vec3(brightness, p, q);
+		default:
+			return vec3(brightness, t, p);
+	}
 }
 
 // mandelbrot function =======================================================
 
 vec3 mandelbrot(vec2 uv) {
-vec3 p1 = parametersMandelbrot1;
-vec3 p2 = parametersMandelbrot2;
+	vec3 p1 = parametersMandelbrot1;
+	vec3 p2 = parametersMandelbrot2;
 
-vec2 z = vec2(0.0 , 0.0);
-vec2 z_0;
-vec2 z_1;
-vec2 z_2;
-float z_0_mag;
-float z_1_mag;
+	vec2 z = vec2(0.0 , 0.0);
+	vec2 z_0;
+	vec2 z_1;
+	vec2 z_2;
+	vec2 z_0_sq;
+	vec2 z_1_sq;
+	float z_0_mag;
+	float z_1_mag;
 
-int i = 0;
-while (i < iterations && complexMagnitude(z) <= 4.0) {
-	// simple mandelbrot formula: z_n+1 = z^2 + c
-	// z = complexSquare(z) + uv;
+	int i = 0;
+	while (i < iterations && complexMagnitude(z) <= 4.0) {
+		// simple mandelbrot formula: z_n+1 = z^2 + c
+		// z = complexSquare(z) + uv;
 
-	z_2 = z_1;
-	z_1 = z_0;
-	z_0 = z;
+		z_2 = z_1;
+		z_1 = z_0;
+		z_0 = z;
 
-	vec2 z_0_sq = complexSquare(z_0);
-	vec2 z_1_sq = complexSquare(z_1);
-	z_0_mag = complexMagnitude(z_0);
-	z_1_mag = complexMagnitude(z_1);
+		z_0_sq = complexSquare(z_0);
+		z_1_sq = complexSquare(z_1);
+		z_0_mag = complexMagnitude(z_0);
+		z_1_mag = complexMagnitude(z_1);
 
-	// the recurrence equation
-	z = p1.x*z_0_sq + p1.y*z_1_sq + p1.z*complexMultiplikation(z_1_sq, z_2)
-	+ p2.x*complexMultiplikation(z_1_sq, z_0) + p2.y*complexMultiplikation(z_2, z_0) + p2.z*complexMultiplikation(z_1, z_2)
-	+ uv;
+		// the recurrence equation
+		z = p1.x*z_0_sq + p1.y*z_1_sq + p1.z*complexMultiplikation(z_1_sq, z_2)
+		+ p2.x*complexMultiplikation(z_1_sq, z_0) + p2.y*complexMultiplikation(z_2, z_0) + p2.z*complexMultiplikation(z_1, z_2)
+		+ uv;
 
-	// increment iteration counter
-	i = i + 1;
-}
+		// increment iteration counter
+		i = i + 1;
+	}
 
-float colorValue = float(i)/float(iterations);
-// some fancy stuff happening
-if(parametersFancy){
-	if(complexMagnitude(z) > 4.0){
-		if(z_0_mag <= 4.0){
-			colorValue = (float(i) - 1.0 + (12.0 - z_1_mag) / (z_0_mag - z_1_mag))/float(iterations);
+	float colorValue = float(i)/float(iterations);
+	// some fancy stuff happening
+	if(parametersFancy){
+		if(complexMagnitude(z) > 4.0){
+			if(z_0_mag <= 4.0){
+				colorValue = (float(i) - 1.0 + (12.0 - z_1_mag) / (z_0_mag - z_1_mag))/float(iterations);
+			}
 		}
 	}
-}
-vec3 col = vec3(0);
-col += 1.0 - colorValue;
+	vec3 col = vec3(0);
+	col += 1.0 - colorValue;
 
-if(colorScaleBool){
-	col = hsv2rgb(360.0*(-colorValue*parametersColor.y+parametersColor.x), 1.0, 1.0-colorValue);
-} else {
-	col = pow(col, colorIntensity*abs(1.0-color));
-}
+	if(colorScaleBool){
+		col = hsv2rgb(360.0*(-colorValue*parametersColor.y+parametersColor.x), 1.0, 1.0-colorValue);
+	} else {
+		col = pow(col, colorIntensity*abs(1.0-color));
+	}
 
-return col;
+	return col;
 }
 
 // main function =============================================================
