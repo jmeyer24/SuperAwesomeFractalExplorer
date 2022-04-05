@@ -1,9 +1,14 @@
+// https://www.shadertoy.com/view/wdGBWc
+// uploaded by Thrump
+//
 // Koch Snowflake - by Martijn Steinrucken aka BigWings 2019
 // Email:countfrolic@gmail.com Twitter:@The_ArtOfCode
-// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
-//
 // This effect is part of a tutorial on YouTube
 // https://www.youtube.com/watch?v=il_Qg9AqQkE
+//
+// Adapted by Leonie Mödl and Jakob Meyer
+//
+// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
 export const KochsnowflakeFrag = `
 
@@ -11,9 +16,7 @@ export const KochsnowflakeFrag = `
 
 precision highp float;
 uniform vec2 res;
-uniform float aspect;
 uniform float zoom;
-uniform vec2 offset;
 
 // gui parameters
 uniform int iterations;
@@ -59,14 +62,15 @@ float kochsnowflake(vec2 uv) {
     }
 
     distance = length(uv - vec2(clamp(uv.x,-1., 1.), 0));
-	alpha = smoothstep(1./res.y, .0, distance/scale);
+	alpha = smoothstep(clamp(10.0*zoom,0.001,5.0)/(res.x), .0, distance/scale);
 
 	return alpha;
 }
 
 void main() {
 	// get the uv coordinates
-	vec2 uv = zoom * 0.3 * (2.0*gl_FragCoord.xy-res.xy)/res.y + offset; // cameraPosition.xy; // TODO: weird stuff...
+	vec2 offset = vec2(cameraPosition.x, -cameraPosition.z);
+	vec2 uv = zoom * 0.3 * (2.0*gl_FragCoord.xy-res.xy)/res.y + offset;
 
 	// compute the current alpha value
 	vec3 brightness = vec3(0);

@@ -1,0 +1,16 @@
+Hi Jakob,
+
+The presentations and final submission are coming up. We wanted to give you a few hints for the presentations:
+
+Computer Games:
+For the presentation think of us as a game publisher. As a publisher, we won’t be likely to play the game, but your presentation must convince us that your game is worth funding. So, try to highlight why it is cool and the potential new “Fortnite”. Highlight the concept, what you did, maybe even show us why it was challenging to create. While we won’t play the game you can create a video walkthrough of the games and even add a commentary. Also, you did a cool thing. We encourage you to upload to game to itch.io, Steam, Play Store, etc.
+For the 6 LP course, we would like to see a 15-minute presentation. Maybe also include an outlook of what you could add to refine it to a full game.
+For the 12 LP course, we have a quite large number of groups. So, the presentation is limited to 10 minutes. You will create trailers and a website which we will use to explore your game in greater detail.
+Also, for both, it would be nice to highlight which things you’ve created yourselves or which assets packs are used – credits where credits are due.
+
+
+Computer Graphics:
+You will present your work in a 15-minute presentation. Please introduce the problem, maybe even related works. Show us why the problem is cool and important to solve. Also, highlight the challenges in solving the problem. Show us how your application/method works either as a live demo or pre-recorded. We will further use your report for evaluation. The length of the report should be around 6-12 pages depending on how much complexity you require. Please do not write over 20 pages. In general, write as much as required to explain the problem. Writing more pages is seldom correlated with a better report. For the report, you will then dive more deeply into the problem formulation, the implementation and maybe add an outlook. Think of it as a mini paper. Please always cite corresponding works. You can use LaTeX to write the report (or Word if you really must…). In the end, just submit a PDF. If the code is small, you can also create a zip of both and submit it. Alternatively, you can link to an online repository. Please also highlight which parts you created yourself and which are taken from an existing codebase.
+
+Best,
+Mark, Andreas, and Zohreh
